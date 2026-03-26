@@ -1,0 +1,17 @@
+{
+  "name": "bask-start",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "tsc --noEmit -p tsconfig.json",
+    "test": "npm run test:contract",
+    "test:contract": "npm run build && node --test dist/__tests__/frontend-readiness-contract.test.js",
+    "start": "node dist/server.js"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "typescript": "^5.9.2"
+  }
+}

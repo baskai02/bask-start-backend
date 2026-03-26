@@ -1,0 +1,188 @@
+{
+  "user_1": [
+    {
+      "id": "workout_1",
+      "userId": "user_1",
+      "date": "2026-03-23",
+      "recordedAt": "2026-03-23T08:00:00.000Z",
+      "type": "upper_push",
+      "plannedDuration": 50,
+      "completedDuration": 47,
+      "sessionExercises": [
+        {
+          "exerciseId": "barbell_bench_press",
+          "sets": 5,
+          "reps": 6,
+          "effort": "hard"
+        },
+        {
+          "exerciseId": "incline_dumbbell_press",
+          "sets": 4,
+          "reps": 8,
+          "effort": "hard"
+        },
+        {
+          "exerciseId": "overhead_shoulder_press",
+          "sets": 4,
+          "reps": 8,
+          "effort": "hard"
+        },
+        {
+          "exerciseId": "tricep_pushdown",
+          "sets": 4,
+          "reps": 12,
+          "effort": "hard"
+        },
+        {
+          "exerciseId": "overhead_tricep_extension",
+          "sets": 3,
+          "reps": 12,
+          "effort": "moderate"
+        }
+      ],
+      "status": "completed"
+    },
+    {
+      "id": "workout_2",
+      "userId": "user_1",
+      "date": "2026-03-22",
+      "recordedAt": "2026-03-22T08:00:00.000Z",
+      "type": "upper_push",
+      "plannedDuration": 45,
+      "completedDuration": 43,
+      "sessionExercises": [
+        {
+          "exerciseId": "barbell_bench_press",
+          "sets": 4,
+          "reps": 8,
+          "effort": "moderate"
+        },
+        {
+          "exerciseId": "lateral_raise",
+          "sets": 4,
+          "reps": 15,
+          "effort": "moderate"
+        },
+        {
+          "exerciseId": "triceps_rope_pushdown",
+          "sets": 4,
+          "reps": 12,
+          "effort": "moderate"
+        }
+      ],
+      "status": "completed"
+    },
+    {
+      "id": "session_1774475084374",
+      "userId": "user_1",
+      "date": "2026-03-25",
+      "recordedAt": "2026-03-25T21:44:44.393Z",
+      "type": "lower_body",
+      "plannedDuration": 45,
+      "completedDuration": 40,
+      "sessionExercises": [],
+      "status": "completed"
+    },
+    {
+      "id": "session_1774475085289",
+      "userId": "user_1",
+      "date": "2026-03-25",
+      "recordedAt": "2026-03-25T21:44:45.296Z",
+      "type": "lower_body",
+      "plannedDuration": 45,
+      "completedDuration": 40,
+      "sessionExercises": [],
+      "status": "completed"
+    },
+    {
+      "id": "session_1774475091289",
+      "userId": "user_1",
+      "date": "2026-03-25",
+      "recordedAt": "2026-03-25T21:44:51.297Z",
+      "type": "lower_body",
+      "plannedDuration": 45,
+      "completedDuration": 40,
+      "sessionExercises": [
+        {
+          "exerciseId": "barbell_bench_press",
+          "sets": 3,
+          "reps": 10,
+          "effort": "moderate"
+        }
+      ],
+      "status": "completed"
+    },
+    {
+      "id": "session_1774475100689",
+      "userId": "user_1",
+      "date": "2026-03-25",
+      "recordedAt": "2026-03-25T21:45:00.699Z",
+      "type": "full_body",
+      "plannedDuration": 45,
+      "completedDuration": 40,
+      "sessionExercises": [
+        {
+          "exerciseId": "barbell_bench_press",
+          "sets": 3,
+          "reps": 10,
+          "effort": "moderate"
+        }
+      ],
+      "status": "completed"
+    },
+    {
+      "id": "session_1774475103990",
+      "userId": "user_1",
+      "date": "2026-03-25",
+      "recordedAt": "2026-03-25T21:45:03.997Z",
+      "type": "upper_push",
+      "plannedDuration": 45,
+      "completedDuration": 40,
+      "sessionExercises": [
+        {
+          "exerciseId": "barbell_bench_press",
+          "sets": 3,
+          "reps": 10,
+          "effort": "moderate"
+        }
+      ],
+      "status": "completed"
+    },
+    {
+      "id": "session_1774475106824",
+      "userId": "user_1",
+      "date": "2026-03-25",
+      "recordedAt": "2026-03-25T21:45:06.830Z",
+      "type": "upper_push",
+      "plannedDuration": 45,
+      "completedDuration": 40,
+      "sessionExercises": [
+        {
+          "exerciseId": "barbell_bench_press",
+          "sets": 3,
+          "reps": 10,
+          "effort": "moderate"
+        }
+      ],
+      "status": "completed"
+    },
+    {
+      "id": "session_1774475115005",
+      "userId": "user_1",
+      "date": "2026-03-28",
+      "recordedAt": "2026-03-25T21:45:15.014Z",
+      "type": "upper_push",
+      "plannedDuration": 45,
+      "completedDuration": 40,
+      "sessionExercises": [
+        {
+          "exerciseId": "barbell_bench_press",
+          "sets": 3,
+          "reps": 10,
+          "effort": "moderate"
+        }
+      ],
+      "status": "completed"
+    }
+  ]
+}

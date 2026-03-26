@@ -1,0 +1,19 @@
+{
+  "user_1": {
+    "userId": "user_1",
+    "name": "Kabur",
+    "goal": "get_fitter",
+    "experienceLevel": "beginner",
+    "motivationStyle": "supportive",
+    "consistencyStatus": "consistent",
+    "consistencyScore": 100,
+    "currentStreak": 1,
+    "recentCompletedCount": 9,
+    "recentMissedCount": 0,
+    "lastActivityAt": "2026-03-28",
+    "restartStyle": "small_sessions",
+    "consistencyRisk": "low",
+    "coachingNote": "Building consistency through recent follow-through.",
+    "lastUpdated": "2026-03-28"
+  }
+}
