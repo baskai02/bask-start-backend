@@ -1,13 +1,42 @@
 import type {
+  ExerciseContributionWeights,
   ExerciseLibraryEntry,
-  ExercisePrescriptionDefaults
+  ExercisePrescriptionDefaults,
+  TrainingEffect
 } from "./types.js";
 
+// Source entries keep a placeholder here, then the library normalizes each exercise
+// through a small set of contribution profiles before export.
 const DEFAULT_WEIGHTS = {
   primary: 1,
   secondary: 0.5,
   stabilizer: 0.25
 } as const;
+
+const CONTRIBUTION_PROFILES = {
+  compound_barbell: { primary: 0.92, secondary: 0.64, stabilizer: 0.34 },
+  compound_dumbbell: { primary: 0.94, secondary: 0.62, stabilizer: 0.36 },
+  compound_cable: { primary: 0.98, secondary: 0.6, stabilizer: 0.2 },
+  compound_machine: { primary: 1, secondary: 0.56, stabilizer: 0.14 },
+  compound_bodyweight: { primary: 0.96, secondary: 0.66, stabilizer: 0.28 },
+  isolation_barbell: { primary: 1.12, secondary: 0.24, stabilizer: 0.14 },
+  isolation_dumbbell: { primary: 1.12, secondary: 0.24, stabilizer: 0.16 },
+  isolation_cable: { primary: 1.08, secondary: 0.28, stabilizer: 0.12 },
+  isolation_machine: { primary: 1.1, secondary: 0.18, stabilizer: 0.05 },
+  isolation_bodyweight: { primary: 1.08, secondary: 0.2, stabilizer: 0.14 }
+} as const satisfies Record<string, ExerciseContributionWeights>;
+
+const UNILATERAL_CONTRIBUTION_MODIFIER = {
+  primary: -0.04,
+  secondary: 0.08,
+  stabilizer: 0.12
+} as const satisfies ExerciseContributionWeights;
+
+const SUPPORTED_SETUP_MODIFIER = {
+  primary: 0.02,
+  secondary: -0.02,
+  stabilizer: -0.1
+} as const satisfies ExerciseContributionWeights;
 
 const DEFAULT_PRESCRIPTION: ExercisePrescriptionDefaults = {
   strengthReps: [3, 6],
@@ -17,7 +46,7 @@ const DEFAULT_PRESCRIPTION: ExercisePrescriptionDefaults = {
   restSeconds: [60, 180]
 };
 
-export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
+const EXERCISE_LIBRARY_SOURCE: ExerciseLibraryEntry[] = [
   {
     exerciseId: "barbell_bench_press",
     name: "Barbell Bench Press",
@@ -30,7 +59,7 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
     primaryMuscles: ["chest"],
     secondaryMuscles: ["front_delts", "triceps"],
     stabilizers: ["core", "upper_back"],
-    contributionWeights: DEFAULT_WEIGHTS,
+    contributionWeights: { primary: 0.98, secondary: 0.6, stabilizer: 0.24 },
     equipment: ["barbell", "bench"],
     alternatives: ["incline_dumbbell_press", "cable_chest_fly"],
     equipmentType: "barbell",
@@ -54,7 +83,7 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
     primaryMuscles: ["chest", "front_delts"],
     secondaryMuscles: ["triceps"],
     stabilizers: ["core", "upper_back"],
-    contributionWeights: DEFAULT_WEIGHTS,
+    contributionWeights: { primary: 0.96, secondary: 0.58, stabilizer: 0.28 },
     equipment: ["dumbbells", "incline bench"],
     alternatives: ["barbell_bench_press", "cable_chest_fly"],
     equipmentType: "dumbbell",
@@ -78,7 +107,7 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
     primaryMuscles: ["chest"],
     secondaryMuscles: ["front_delts"],
     stabilizers: ["core"],
-    contributionWeights: DEFAULT_WEIGHTS,
+    contributionWeights: { primary: 1.04, secondary: 0.22, stabilizer: 0.12 },
     equipment: ["cable station"],
     alternatives: ["barbell_bench_press", "incline_dumbbell_press"],
     equipmentType: "cable",
@@ -89,6 +118,30 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
     recoveryTimeHours: 36,
     trainingEffects: ["chest_isolation"],
     tags: ["chest", "isolation", "cable"]
+  },
+  {
+    exerciseId: "pec_deck_fly",
+    name: "Pec Deck Fly",
+    category: "strength_hypertrophy",
+    liftType: "isolation",
+    skillLevel: "beginner_to_advanced",
+    movementPattern: "horizontal_push",
+    plane: "transverse",
+    stability: "high",
+    primaryMuscles: ["chest"],
+    secondaryMuscles: ["front_delts"],
+    stabilizers: [],
+    contributionWeights: { primary: 1.08, secondary: 0.16, stabilizer: 0.04 },
+    equipment: ["pec deck machine"],
+    alternatives: ["cable_chest_fly", "barbell_bench_press", "incline_dumbbell_press"],
+    equipmentType: "machine",
+    prescriptionDefaults: DEFAULT_PRESCRIPTION,
+    systemicFatigue: "low",
+    localFatigue: "high",
+    fatigueScore: 5,
+    recoveryTimeHours: 36,
+    trainingEffects: ["chest_isolation"],
+    tags: ["chest", "isolation", "machine", "pec_deck"]
   },
   {
     exerciseId: "overhead_shoulder_press",
@@ -102,7 +155,7 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
     primaryMuscles: ["front_delts", "triceps"],
     secondaryMuscles: ["side_delts"],
     stabilizers: ["core", "upper_back"],
-    contributionWeights: DEFAULT_WEIGHTS,
+    contributionWeights: { primary: 0.96, secondary: 0.62, stabilizer: 0.3 },
     equipment: ["barbell", "dumbbells"],
     alternatives: ["lateral_raise", "rear_delt_fly"],
     equipmentType: "barbell",
@@ -113,6 +166,30 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
     recoveryTimeHours: 48,
     trainingEffects: ["vertical_press", "front_delt_press"],
     tags: ["shoulders", "push", "overhead"]
+  },
+  {
+    exerciseId: "machine_shoulder_press",
+    name: "Machine Shoulder Press",
+    category: "strength_hypertrophy",
+    liftType: "compound",
+    skillLevel: "beginner_to_advanced",
+    movementPattern: "vertical_push",
+    plane: "sagittal",
+    stability: "high",
+    primaryMuscles: ["front_delts", "triceps"],
+    secondaryMuscles: ["side_delts", "chest"],
+    stabilizers: ["upper_back", "core"],
+    contributionWeights: { primary: 0.98, secondary: 0.5, stabilizer: 0.1 },
+    equipment: ["shoulder press machine"],
+    alternatives: ["overhead_shoulder_press", "lateral_raise", "cable_lateral_raise"],
+    equipmentType: "machine",
+    prescriptionDefaults: DEFAULT_PRESCRIPTION,
+    systemicFatigue: "medium",
+    localFatigue: "high",
+    fatigueScore: 6,
+    recoveryTimeHours: 36,
+    trainingEffects: ["vertical_press", "front_delt_press"],
+    tags: ["shoulders", "push", "machine", "overhead"]
   },
   {
     exerciseId: "lateral_raise",
@@ -126,7 +203,7 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
     primaryMuscles: ["side_delts"],
     secondaryMuscles: ["front_delts"],
     stabilizers: ["upper_back"],
-    contributionWeights: DEFAULT_WEIGHTS,
+    contributionWeights: { primary: 1.08, secondary: 0.22, stabilizer: 0.12 },
     equipment: ["dumbbells", "cables"],
     alternatives: ["rear_delt_fly", "overhead_shoulder_press"],
     equipmentType: "dumbbell",
@@ -137,6 +214,30 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
     recoveryTimeHours: 24,
     trainingEffects: ["lateral_delt_isolation", "side_delt_bias"],
     tags: ["shoulders", "isolation", "dumbbell"]
+  },
+  {
+    exerciseId: "cable_lateral_raise",
+    name: "Cable Lateral Raise",
+    category: "strength_hypertrophy",
+    liftType: "isolation",
+    skillLevel: "beginner_to_advanced",
+    movementPattern: "vertical_push",
+    plane: "frontal",
+    stability: "medium",
+    primaryMuscles: ["side_delts"],
+    secondaryMuscles: ["front_delts", "upper_traps"],
+    stabilizers: ["upper_back", "core"],
+    contributionWeights: { primary: 1.06, secondary: 0.26, stabilizer: 0.1 },
+    equipment: ["cable stack", "single handle"],
+    alternatives: ["lateral_raise", "machine_shoulder_press", "rear_delt_fly"],
+    equipmentType: "cable",
+    prescriptionDefaults: DEFAULT_PRESCRIPTION,
+    systemicFatigue: "low",
+    localFatigue: "medium",
+    fatigueScore: 4,
+    recoveryTimeHours: 24,
+    trainingEffects: ["lateral_delt_isolation", "side_delt_bias"],
+    tags: ["shoulders", "isolation", "cable", "side_delts"]
   },
   {
     exerciseId: "rear_delt_fly",
@@ -150,7 +251,7 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
     primaryMuscles: ["rear_delts"],
     secondaryMuscles: ["upper_back"],
     stabilizers: ["core"],
-    contributionWeights: DEFAULT_WEIGHTS,
+    contributionWeights: { primary: 1.06, secondary: 0.28, stabilizer: 0.12 },
     equipment: ["dumbbells", "cable station"],
     alternatives: ["lateral_raise", "overhead_shoulder_press"],
     equipmentType: "dumbbell",
@@ -182,7 +283,7 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
       "forearm_flexors"
     ],
     stabilizers: ["rotator_cuff", "core", "spinal_erectors"],
-    contributionWeights: DEFAULT_WEIGHTS,
+    contributionWeights: { primary: 0.98, secondary: 0.68, stabilizer: 0.3 },
     equipment: ["pull-up bar", "bodyweight"],
     alternatives: ["barbell_curl", "rear_delt_fly"],
     equipmentType: "bodyweight",
@@ -214,7 +315,7 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
       "forearm_flexors"
     ],
     stabilizers: ["rotator_cuff", "core"],
-    contributionWeights: DEFAULT_WEIGHTS,
+    contributionWeights: { primary: 0.94, secondary: 0.56, stabilizer: 0.12 },
     equipment: ["assisted pull-up machine"],
     alternatives: ["pull_up", "lat_pulldown"],
     equipmentType: "machine",
@@ -246,7 +347,7 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
       "forearm_flexors"
     ],
     stabilizers: ["rotator_cuff", "core"],
-    contributionWeights: DEFAULT_WEIGHTS,
+    contributionWeights: { primary: 0.98, secondary: 0.6, stabilizer: 0.14 },
     equipment: ["cable machine", "lat pulldown station"],
     alternatives: ["pull_up", "assisted_pull_up_machine"],
     equipmentType: "cable",
@@ -277,7 +378,7 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
       "forearm_flexors"
     ],
     stabilizers: ["core", "rotator_cuff", "upper_back"],
-    contributionWeights: DEFAULT_WEIGHTS,
+    contributionWeights: { primary: 0.98, secondary: 0.58, stabilizer: 0.14 },
     equipment: ["cable row station", "row handle"],
     alternatives: ["one_arm_dumbbell_row", "chest_supported_machine_row"],
     equipmentType: "cable",
@@ -308,7 +409,7 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
       "forearm_flexors"
     ],
     stabilizers: ["core", "serratus_anterior", "rotator_cuff", "spinal_erectors", "glute_meds"],
-    contributionWeights: DEFAULT_WEIGHTS,
+    contributionWeights: { primary: 0.94, secondary: 0.6, stabilizer: 0.24 },
     equipment: ["cable stack", "single handle"],
     alternatives: ["seated_cable_row", "one_arm_dumbbell_row", "chest_supported_dumbbell_row"],
     equipmentType: "cable",
@@ -340,7 +441,7 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
       "spinal_erectors"
     ],
     stabilizers: ["core", "rotator_cuff", "glutes"],
-    contributionWeights: DEFAULT_WEIGHTS,
+    contributionWeights: { primary: 0.92, secondary: 0.62, stabilizer: 0.28 },
     equipment: ["dumbbell", "bench"],
     alternatives: ["seated_cable_row", "chest_supported_machine_row"],
     equipmentType: "dumbbell",
@@ -371,7 +472,7 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
       "spinal_erectors"
     ],
     stabilizers: ["rotator_cuff", "serratus_anterior", "core"],
-    contributionWeights: DEFAULT_WEIGHTS,
+    contributionWeights: { primary: 0.96, secondary: 0.6, stabilizer: 0.14 },
     equipment: ["dumbbells", "adjustable bench"],
     alternatives: ["chest_supported_machine_row", "seated_cable_row", "t_bar_row"],
     equipmentType: "dumbbell",
@@ -405,7 +506,7 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
       "hamstrings"
     ],
     stabilizers: ["core", "rotator_cuff", "serratus_anterior", "upper_back"],
-    contributionWeights: DEFAULT_WEIGHTS,
+    contributionWeights: { primary: 0.96, secondary: 0.64, stabilizer: 0.24 },
     equipment: ["t-bar row station", "plates"],
     alternatives: ["barbell_bent_over_row", "chest_supported_dumbbell_row", "seated_cable_row"],
     equipmentType: "machine",
@@ -439,7 +540,7 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
       "hamstrings"
     ],
     stabilizers: ["core", "rotator_cuff", "serratus_anterior", "upper_back"],
-    contributionWeights: DEFAULT_WEIGHTS,
+    contributionWeights: { primary: 0.94, secondary: 0.66, stabilizer: 0.3 },
     equipment: ["barbell", "plates"],
     alternatives: ["t_bar_row", "seated_cable_row", "chest_supported_dumbbell_row"],
     equipmentType: "barbell",
@@ -470,7 +571,7 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
       "forearm_flexors"
     ],
     stabilizers: ["rotator_cuff"],
-    contributionWeights: DEFAULT_WEIGHTS,
+    contributionWeights: { primary: 1.02, secondary: 0.58, stabilizer: 0.08 },
     equipment: ["chest-supported row machine"],
     alternatives: ["seated_cable_row", "one_arm_dumbbell_row"],
     equipmentType: "machine",
@@ -494,7 +595,7 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
     primaryMuscles: ["rear_delts", "rhomboids", "mid_traps"],
     secondaryMuscles: ["lower_traps", "rotator_cuff", "biceps", "forearm_flexors"],
     stabilizers: ["core", "upper_back"],
-    contributionWeights: DEFAULT_WEIGHTS,
+    contributionWeights: { primary: 1, secondary: 0.34, stabilizer: 0.14 },
     equipment: ["cable stack", "rope attachment"],
     alternatives: ["rear_delt_fly", "cable_rear_delt_fly"],
     equipmentType: "cable",
@@ -524,7 +625,7 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
       "biceps"
     ],
     stabilizers: ["core", "upper_back"],
-    contributionWeights: DEFAULT_WEIGHTS,
+    contributionWeights: { primary: 1.04, secondary: 0.3, stabilizer: 0.12 },
     equipment: ["cable station", "d-handles"],
     alternatives: ["rear_delt_fly", "cable_face_pull"],
     equipmentType: "cable",
@@ -548,7 +649,7 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
     primaryMuscles: ["biceps"],
     secondaryMuscles: ["brachialis", "brachioradialis"],
     stabilizers: ["core"],
-    contributionWeights: DEFAULT_WEIGHTS,
+    contributionWeights: { primary: 1.08, secondary: 0.28, stabilizer: 0.08 },
     equipment: ["barbell"],
     alternatives: ["hammer_curl", "preacher_curl"],
     equipmentType: "barbell",
@@ -572,7 +673,7 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
     primaryMuscles: ["brachialis", "brachioradialis"],
     secondaryMuscles: ["biceps"],
     stabilizers: ["core"],
-    contributionWeights: DEFAULT_WEIGHTS,
+    contributionWeights: { primary: 1.06, secondary: 0.34, stabilizer: 0.1 },
     equipment: ["dumbbells"],
     alternatives: ["barbell_curl", "preacher_curl"],
     equipmentType: "dumbbell",
@@ -583,6 +684,30 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
     recoveryTimeHours: 24,
     trainingEffects: ["biceps_isolation", "neutral_grip_curl"],
     tags: ["arms", "forearms", "dumbbell"]
+  },
+  {
+    exerciseId: "rope_hammer_curl",
+    name: "Rope Hammer Curl",
+    category: "strength_hypertrophy",
+    liftType: "isolation",
+    skillLevel: "beginner_to_advanced",
+    movementPattern: "elbow_flexion",
+    plane: "sagittal",
+    stability: "medium",
+    primaryMuscles: ["brachialis", "brachioradialis"],
+    secondaryMuscles: ["biceps", "forearm_flexors"],
+    stabilizers: ["core"],
+    contributionWeights: { primary: 1.04, secondary: 0.36, stabilizer: 0.08 },
+    equipment: ["cable stack", "rope attachment"],
+    alternatives: ["hammer_curl", "barbell_curl", "preacher_curl"],
+    equipmentType: "cable",
+    prescriptionDefaults: DEFAULT_PRESCRIPTION,
+    systemicFatigue: "low",
+    localFatigue: "medium",
+    fatigueScore: 4,
+    recoveryTimeHours: 24,
+    trainingEffects: ["biceps_isolation", "neutral_grip_curl"],
+    tags: ["arms", "forearms", "cable", "neutral_grip"]
   },
   {
     exerciseId: "preacher_curl",
@@ -596,7 +721,7 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
     primaryMuscles: ["biceps"],
     secondaryMuscles: ["brachialis"],
     stabilizers: [],
-    contributionWeights: DEFAULT_WEIGHTS,
+    contributionWeights: { primary: 1.12, secondary: 0.18, stabilizer: 0.02 },
     equipment: ["ez bar", "preacher bench"],
     alternatives: ["barbell_curl", "hammer_curl"],
     equipmentType: "barbell",
@@ -620,7 +745,7 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
     primaryMuscles: ["triceps"],
     secondaryMuscles: [],
     stabilizers: ["core"],
-    contributionWeights: DEFAULT_WEIGHTS,
+    contributionWeights: { primary: 1.1, secondary: 0.08, stabilizer: 0.04 },
     equipment: ["cable station"],
     alternatives: [
       "triceps_rope_pushdown",
@@ -648,7 +773,7 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
     primaryMuscles: ["triceps"],
     secondaryMuscles: ["anconeus", "forearm_flexors", "lower_traps", "serratus_anterior"],
     stabilizers: ["core"],
-    contributionWeights: DEFAULT_WEIGHTS,
+    contributionWeights: { primary: 1.08, secondary: 0.16, stabilizer: 0.06 },
     equipment: ["cable stack", "rope attachment"],
     alternatives: [
       "triceps_cable_pushdown_straight_bar",
@@ -676,7 +801,7 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
     primaryMuscles: ["triceps"],
     secondaryMuscles: ["anconeus", "forearm_flexors", "lower_traps", "serratus_anterior"],
     stabilizers: ["core"],
-    contributionWeights: DEFAULT_WEIGHTS,
+    contributionWeights: { primary: 1.1, secondary: 0.14, stabilizer: 0.05 },
     equipment: ["cable stack", "straight bar attachment"],
     alternatives: [
       "triceps_rope_pushdown",
@@ -704,7 +829,7 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
     primaryMuscles: ["triceps"],
     secondaryMuscles: ["front_delts"],
     stabilizers: ["core"],
-    contributionWeights: DEFAULT_WEIGHTS,
+    contributionWeights: { primary: 1.06, secondary: 0.18, stabilizer: 0.08 },
     equipment: ["dumbbell", "cable station"],
     alternatives: ["tricep_pushdown", "overhead_shoulder_press"],
     equipmentType: "dumbbell",
@@ -715,6 +840,34 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
     recoveryTimeHours: 24,
     trainingEffects: ["triceps_isolation", "overhead_triceps"],
     tags: ["triceps", "overhead", "arms"]
+  },
+  {
+    exerciseId: "cable_overhead_tricep_extension",
+    name: "Cable Overhead Tricep Extension",
+    category: "strength_hypertrophy",
+    liftType: "isolation",
+    skillLevel: "beginner_to_advanced",
+    movementPattern: "elbow_extension",
+    plane: "sagittal",
+    stability: "medium",
+    primaryMuscles: ["triceps"],
+    secondaryMuscles: ["front_delts", "anconeus"],
+    stabilizers: ["core", "upper_back"],
+    contributionWeights: { primary: 1.04, secondary: 0.2, stabilizer: 0.1 },
+    equipment: ["cable stack", "rope attachment"],
+    alternatives: [
+      "overhead_tricep_extension",
+      "tricep_pushdown",
+      "triceps_rope_pushdown"
+    ],
+    equipmentType: "cable",
+    prescriptionDefaults: DEFAULT_PRESCRIPTION,
+    systemicFatigue: "low",
+    localFatigue: "medium",
+    fatigueScore: 4,
+    recoveryTimeHours: 24,
+    trainingEffects: ["triceps_isolation", "overhead_triceps"],
+    tags: ["triceps", "overhead", "cable", "arms"]
   },
   {
     exerciseId: "squat",
@@ -728,7 +881,7 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
     primaryMuscles: ["quads", "glutes"],
     secondaryMuscles: ["hamstrings"],
     stabilizers: ["core", "spinal_erectors"],
-    contributionWeights: DEFAULT_WEIGHTS,
+    contributionWeights: { primary: 0.96, secondary: 0.62, stabilizer: 0.3 },
     equipment: ["barbell", "rack"],
     alternatives: ["leg_press", "leg_extension"],
     equipmentType: "barbell",
@@ -752,7 +905,7 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
     primaryMuscles: ["quads", "glutes", "adductors"],
     secondaryMuscles: ["hamstrings", "spinal_erectors", "calves"],
     stabilizers: ["core", "glute_meds", "upper_back"],
-    contributionWeights: DEFAULT_WEIGHTS,
+    contributionWeights: { primary: 0.98, secondary: 0.66, stabilizer: 0.32 },
     equipment: ["barbell", "rack", "plates"],
     alternatives: ["hack_squat", "goblet_squat", "leg_press"],
     equipmentType: "barbell",
@@ -776,7 +929,7 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
     primaryMuscles: ["quads", "glutes"],
     secondaryMuscles: ["hamstrings"],
     stabilizers: [],
-    contributionWeights: DEFAULT_WEIGHTS,
+    contributionWeights: { primary: 1, secondary: 0.5, stabilizer: 0.04 },
     equipment: ["leg press machine"],
     alternatives: ["squat", "leg_extension"],
     equipmentType: "machine",
@@ -800,7 +953,7 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
     primaryMuscles: ["quads", "glutes", "adductors"],
     secondaryMuscles: ["hamstrings", "calves", "core"],
     stabilizers: ["glute_meds"],
-    contributionWeights: DEFAULT_WEIGHTS,
+    contributionWeights: { primary: 1, secondary: 0.54, stabilizer: 0.08 },
     equipment: ["hack squat machine"],
     alternatives: ["barbell_back_squat", "leg_press", "goblet_squat"],
     equipmentType: "machine",
@@ -824,7 +977,7 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
     primaryMuscles: ["quads", "glutes", "adductors"],
     secondaryMuscles: ["core", "upper_back", "hamstrings"],
     stabilizers: ["glute_meds"],
-    contributionWeights: DEFAULT_WEIGHTS,
+    contributionWeights: { primary: 0.94, secondary: 0.58, stabilizer: 0.3 },
     equipment: ["dumbbell", "kettlebell"],
     alternatives: ["barbell_back_squat", "hack_squat", "bulgarian_split_squat"],
     equipmentType: "dumbbell",
@@ -848,7 +1001,7 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
     primaryMuscles: ["quads", "glutes", "adductors"],
     secondaryMuscles: ["hamstrings", "calves", "spinal_erectors"],
     stabilizers: ["glute_meds", "core"],
-    contributionWeights: DEFAULT_WEIGHTS,
+    contributionWeights: { primary: 0.9, secondary: 0.68, stabilizer: 0.42 },
     equipment: ["bench", "dumbbells", "bodyweight"],
     alternatives: ["walking_lunge", "goblet_squat", "hack_squat"],
     equipmentType: "dumbbell",
@@ -872,7 +1025,7 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
     primaryMuscles: ["quads", "glutes", "adductors"],
     secondaryMuscles: ["hamstrings", "calves", "glute_meds"],
     stabilizers: ["core", "upper_back"],
-    contributionWeights: DEFAULT_WEIGHTS,
+    contributionWeights: { primary: 0.9, secondary: 0.66, stabilizer: 0.4 },
     equipment: ["bodyweight", "dumbbells", "barbell"],
     alternatives: ["bulgarian_split_squat", "goblet_squat", "barbell_back_squat"],
     equipmentType: "bodyweight",
@@ -896,7 +1049,7 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
     primaryMuscles: ["hamstrings", "glutes"],
     secondaryMuscles: ["spinal_erectors"],
     stabilizers: ["core"],
-    contributionWeights: DEFAULT_WEIGHTS,
+    contributionWeights: { primary: 0.98, secondary: 0.56, stabilizer: 0.28 },
     equipment: ["barbell", "dumbbells"],
     alternatives: ["leg_curl", "squat"],
     equipmentType: "barbell",
@@ -920,7 +1073,7 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
     primaryMuscles: ["glutes", "hamstrings", "spinal_erectors"],
     secondaryMuscles: ["adductors", "lats", "upper_back", "quads", "forearm_flexors", "upper_traps"],
     stabilizers: ["core", "rhomboids", "lower_traps", "rotator_cuff"],
-    contributionWeights: DEFAULT_WEIGHTS,
+    contributionWeights: { primary: 1, secondary: 0.64, stabilizer: 0.34 },
     equipment: ["barbell", "plates", "platform"],
     alternatives: ["romanian_deadlift", "barbell_hip_thrust", "t_bar_row"],
     equipmentType: "barbell",
@@ -942,9 +1095,9 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
     plane: "frontal",
     stability: "medium",
     primaryMuscles: ["upper_traps"],
-    secondaryMuscles: ["mid_traps", "forearm_flexors", "rhomboids", "spinal_erectors"],
-    stabilizers: ["core", "lower_traps", "rotator_cuff", "upper_back"],
-    contributionWeights: DEFAULT_WEIGHTS,
+    secondaryMuscles: ["mid_traps", "forearm_flexors"],
+    stabilizers: ["core", "upper_back"],
+    contributionWeights: { primary: 1.08, secondary: 0.18, stabilizer: 0.12 },
     equipment: ["dumbbells", "barbell", "smith machine"],
     alternatives: ["deadlift_conventional", "barbell_bent_over_row", "t_bar_row"],
     equipmentType: "dumbbell",
@@ -955,6 +1108,30 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
     recoveryTimeHours: 24,
     trainingEffects: ["trap_isolation", "upper_trap_isolation"],
     tags: ["traps", "carry", "isolation", "upper_back"]
+  },
+  {
+    exerciseId: "smith_machine_shrug",
+    name: "Smith Machine Shrug",
+    category: "strength_hypertrophy",
+    liftType: "isolation",
+    skillLevel: "beginner_to_advanced",
+    movementPattern: "carry",
+    plane: "frontal",
+    stability: "high",
+    primaryMuscles: ["upper_traps"],
+    secondaryMuscles: ["mid_traps", "forearm_flexors"],
+    stabilizers: ["core", "upper_back"],
+    contributionWeights: { primary: 1.1, secondary: 0.16, stabilizer: 0.05 },
+    equipment: ["smith machine"],
+    alternatives: ["shrug", "barbell_bent_over_row", "deadlift_conventional"],
+    equipmentType: "machine",
+    prescriptionDefaults: DEFAULT_PRESCRIPTION,
+    systemicFatigue: "low",
+    localFatigue: "medium",
+    fatigueScore: 4,
+    recoveryTimeHours: 24,
+    trainingEffects: ["trap_isolation", "upper_trap_isolation"],
+    tags: ["traps", "smith_machine", "isolation", "upper_back"]
   },
   {
     exerciseId: "barbell_hip_thrust",
@@ -968,7 +1145,7 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
     primaryMuscles: ["glutes", "glute_meds"],
     secondaryMuscles: ["hamstrings", "adductors", "quads"],
     stabilizers: ["core", "spinal_erectors", "upper_back"],
-    contributionWeights: DEFAULT_WEIGHTS,
+    contributionWeights: { primary: 1, secondary: 0.5, stabilizer: 0.14 },
     equipment: ["barbell", "bench", "plates", "pad"],
     alternatives: ["romanian_deadlift", "goblet_squat", "walking_lunge"],
     equipmentType: "barbell",
@@ -979,6 +1156,30 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
     recoveryTimeHours: 48,
     trainingEffects: ["glute_bias"],
     tags: ["glutes", "hinge", "barbell", "hip_thrust"]
+  },
+  {
+    exerciseId: "glute_bridge",
+    name: "Glute Bridge",
+    category: "strength_hypertrophy",
+    liftType: "compound",
+    skillLevel: "beginner_to_advanced",
+    movementPattern: "hinge",
+    plane: "sagittal",
+    stability: "medium",
+    primaryMuscles: ["glutes", "glute_meds"],
+    secondaryMuscles: ["hamstrings", "adductors"],
+    stabilizers: ["core"],
+    contributionWeights: { primary: 1, secondary: 0.42, stabilizer: 0.12 },
+    equipment: ["bodyweight", "dumbbell", "barbell", "bench"],
+    alternatives: ["barbell_hip_thrust", "walking_lunge", "romanian_deadlift"],
+    equipmentType: "bodyweight",
+    prescriptionDefaults: DEFAULT_PRESCRIPTION,
+    systemicFatigue: "low",
+    localFatigue: "medium",
+    fatigueScore: 5,
+    recoveryTimeHours: 24,
+    trainingEffects: ["glute_bias"],
+    tags: ["glutes", "hinge", "bodyweight", "bridge"]
   },
   {
     exerciseId: "leg_curl",
@@ -992,7 +1193,7 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
     primaryMuscles: ["hamstrings"],
     secondaryMuscles: ["calves"],
     stabilizers: [],
-    contributionWeights: DEFAULT_WEIGHTS,
+    contributionWeights: { primary: 1.1, secondary: 0.18, stabilizer: 0.04 },
     equipment: ["leg curl machine"],
     alternatives: ["lying_leg_curl", "seated_leg_curl", "romanian_deadlift"],
     equipmentType: "machine",
@@ -1016,7 +1217,7 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
     primaryMuscles: ["hamstrings"],
     secondaryMuscles: ["calves", "glutes"],
     stabilizers: ["core", "spinal_erectors"],
-    contributionWeights: DEFAULT_WEIGHTS,
+    contributionWeights: { primary: 1.08, secondary: 0.24, stabilizer: 0.08 },
     equipment: ["lying leg curl machine"],
     alternatives: ["seated_leg_curl", "leg_curl", "romanian_deadlift"],
     equipmentType: "machine",
@@ -1040,7 +1241,7 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
     primaryMuscles: ["hamstrings"],
     secondaryMuscles: ["calves", "glutes"],
     stabilizers: ["core", "spinal_erectors"],
-    contributionWeights: DEFAULT_WEIGHTS,
+    contributionWeights: { primary: 1.1, secondary: 0.2, stabilizer: 0.06 },
     equipment: ["seated leg curl machine"],
     alternatives: ["lying_leg_curl", "leg_curl", "romanian_deadlift"],
     equipmentType: "machine",
@@ -1064,7 +1265,7 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
     primaryMuscles: ["quads"],
     secondaryMuscles: [],
     stabilizers: [],
-    contributionWeights: DEFAULT_WEIGHTS,
+    contributionWeights: { primary: 1.1, secondary: 0.12, stabilizer: 0.03 },
     equipment: ["leg extension machine"],
     alternatives: ["squat", "leg_press"],
     equipmentType: "machine",
@@ -1088,7 +1289,7 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
     primaryMuscles: ["calves"],
     secondaryMuscles: [],
     stabilizers: ["core"],
-    contributionWeights: DEFAULT_WEIGHTS,
+    contributionWeights: { primary: 1.08, secondary: 0.1, stabilizer: 0.06 },
     equipment: ["machine", "bodyweight", "dumbbells"],
     alternatives: ["leg_press", "leg_extension"],
     equipmentType: "machine",
@@ -1099,11 +1300,172 @@ export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] = [
     recoveryTimeHours: 24,
     trainingEffects: ["calf_isolation"],
     tags: ["calves", "lower_body", "isolation"]
+  },
+  {
+    exerciseId: "seated_calf_raise",
+    name: "Seated Calf Raise",
+    category: "strength_hypertrophy",
+    liftType: "isolation",
+    skillLevel: "beginner_to_advanced",
+    movementPattern: "plantar_flexion",
+    plane: "sagittal",
+    stability: "high",
+    primaryMuscles: ["calves"],
+    secondaryMuscles: [],
+    stabilizers: ["core"],
+    contributionWeights: { primary: 1.1, secondary: 0.08, stabilizer: 0.04 },
+    equipment: ["seated calf raise machine"],
+    alternatives: ["calf_raise", "leg_press"],
+    equipmentType: "machine",
+    prescriptionDefaults: DEFAULT_PRESCRIPTION,
+    systemicFatigue: "low",
+    localFatigue: "low",
+    fatigueScore: 3,
+    recoveryTimeHours: 24,
+    trainingEffects: ["calf_isolation"],
+    tags: ["calves", "lower_body", "machine", "isolation"]
   }
 ];
 
+function resolveBaseContributionWeights(
+  exercise: Pick<ExerciseLibraryEntry, "liftType" | "equipmentType">
+): ExerciseContributionWeights {
+  if (exercise.liftType === "compound") {
+    switch (exercise.equipmentType) {
+      case "barbell":
+        return CONTRIBUTION_PROFILES.compound_barbell;
+      case "dumbbell":
+        return CONTRIBUTION_PROFILES.compound_dumbbell;
+      case "cable":
+        return CONTRIBUTION_PROFILES.compound_cable;
+      case "machine":
+        return CONTRIBUTION_PROFILES.compound_machine;
+      case "bodyweight":
+        return CONTRIBUTION_PROFILES.compound_bodyweight;
+    }
+  }
+
+  switch (exercise.equipmentType) {
+    case "barbell":
+      return CONTRIBUTION_PROFILES.isolation_barbell;
+    case "dumbbell":
+      return CONTRIBUTION_PROFILES.isolation_dumbbell;
+    case "cable":
+      return CONTRIBUTION_PROFILES.isolation_cable;
+    case "machine":
+      return CONTRIBUTION_PROFILES.isolation_machine;
+    case "bodyweight":
+      return CONTRIBUTION_PROFILES.isolation_bodyweight;
+  }
+}
+
+function hasUnilateralLoadBias(
+  exercise: Pick<ExerciseLibraryEntry, "exerciseId" | "tags">
+): boolean {
+  return (
+    exercise.tags.includes("unilateral") ||
+    ["single_arm", "one_arm", "single_leg", "split", "walking_lunge"].some((marker) =>
+      exercise.exerciseId.includes(marker)
+    )
+  );
+}
+
+function hasSupportedSetup(
+  exercise: Pick<ExerciseLibraryEntry, "exerciseId" | "equipmentType">
+): boolean {
+  if (exercise.equipmentType === "machine") {
+    return true;
+  }
+
+  return ["chest_supported", "seated_", "preacher_", "pec_deck", "assisted_"].some(
+    (marker) => exercise.exerciseId.includes(marker)
+  );
+}
+
+function applyContributionModifier(
+  baseWeights: ExerciseContributionWeights,
+  modifier: ExerciseContributionWeights
+): ExerciseContributionWeights {
+  return {
+    primary: baseWeights.primary + modifier.primary,
+    secondary: baseWeights.secondary + modifier.secondary,
+    stabilizer: baseWeights.stabilizer + modifier.stabilizer
+  };
+}
+
+function clampContributionWeight(value: number, floor: number, ceiling: number): number {
+  return Number(Math.min(ceiling, Math.max(floor, value)).toFixed(2));
+}
+
+function usesGenericContributionWeights(
+  weights: ExerciseContributionWeights
+): boolean {
+  return (
+    weights.primary === DEFAULT_WEIGHTS.primary &&
+    weights.secondary === DEFAULT_WEIGHTS.secondary &&
+    weights.stabilizer === DEFAULT_WEIGHTS.stabilizer
+  );
+}
+
+function normalizeContributionWeights(
+  weights: ExerciseContributionWeights
+): ExerciseContributionWeights {
+  return {
+    primary: clampContributionWeight(weights.primary, 0.75, 1.2),
+    secondary: clampContributionWeight(weights.secondary, 0.1, 0.9),
+    stabilizer: clampContributionWeight(weights.stabilizer, 0.02, 0.5)
+  };
+}
+
+function withContributionWeights(exercise: ExerciseLibraryEntry): ExerciseLibraryEntry {
+  if (!usesGenericContributionWeights(exercise.contributionWeights)) {
+    return {
+      ...exercise,
+      contributionWeights: normalizeContributionWeights(exercise.contributionWeights)
+    };
+  }
+
+  let contributionWeights = resolveBaseContributionWeights(exercise);
+
+  if (hasUnilateralLoadBias(exercise)) {
+    contributionWeights = applyContributionModifier(
+      contributionWeights,
+      UNILATERAL_CONTRIBUTION_MODIFIER
+    );
+  }
+
+  if (hasSupportedSetup(exercise) && exercise.equipmentType !== "machine") {
+    contributionWeights = applyContributionModifier(
+      contributionWeights,
+      SUPPORTED_SETUP_MODIFIER
+    );
+  }
+
+  return {
+    ...exercise,
+    contributionWeights: normalizeContributionWeights(contributionWeights)
+  };
+}
+
+export const EXERCISE_LIBRARY: ExerciseLibraryEntry[] =
+  EXERCISE_LIBRARY_SOURCE.map(withContributionWeights);
+
 export const EXERCISE_LIBRARY_BY_ID = new Map(
   EXERCISE_LIBRARY.map((exercise) => [exercise.exerciseId, exercise])
+);
+
+export const EXERCISE_LIBRARY_BY_TRAINING_EFFECT = new Map<
+  TrainingEffect,
+  ExerciseLibraryEntry[]
+>(
+  [...new Set(EXERCISE_LIBRARY.flatMap((exercise) => exercise.trainingEffects ?? []))].map(
+    (effect) => [
+      effect,
+      EXERCISE_LIBRARY.filter((exercise) =>
+        (exercise.trainingEffects ?? []).includes(effect)
+      )
+    ]
+  )
 );
 
 export function getExerciseLibrary(): ExerciseLibraryEntry[] {
@@ -1112,4 +1474,10 @@ export function getExerciseLibrary(): ExerciseLibraryEntry[] {
 
 export function getExerciseById(exerciseId: string): ExerciseLibraryEntry | undefined {
   return EXERCISE_LIBRARY_BY_ID.get(exerciseId);
+}
+
+export function getExercisesByTrainingEffect(
+  trainingEffect: TrainingEffect
+): ExerciseLibraryEntry[] {
+  return EXERCISE_LIBRARY_BY_TRAINING_EFFECT.get(trainingEffect) ?? [];
 }

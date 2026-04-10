@@ -43,13 +43,43 @@ Notes:
 - use `*` only for loose local debugging
 - this backend responds to `OPTIONS` preflight requests for cross-origin fetches
 
+### Railway deploy note
+
+If Lovable preview is hosted remotely, it will not be able to reach
+`http://localhost:3000` on your machine.
+
+In that case:
+
+1. deploy the backend to Railway
+2. set `CORS_ALLOW_ORIGINS=*` temporarily for testing
+3. use the Railway public URL as the Lovable API base URL
+
+Example backend base URL:
+
+```text
+https://your-railway-service.up.railway.app
+```
+
+### Recommended longer self-test deploy
+
+For longer phone testing with durable data, use:
+
+```text
+Lovable frontend
+Render backend
+Supabase Postgres database
+```
+
+See [docs/deploy-render-supabase.md](/Users/olivergilder/Documents/Bask_start/docs/deploy-render-supabase.md).
+
 Recommended first Lovable calls:
 
-1. `GET /users/:userId/kai?asOf=YYYY-MM-DD`
-2. `GET /users/:userId/today-readiness?asOf=YYYY-MM-DD`
+1. `GET /health`
+2. `GET /profile-options`
 3. `GET /exercise-library`
-4. `POST /users/:userId/workout-sessions`
-5. `GET /health`
+4. `GET /users/:userId/app-state?asOf=YYYY-MM-DD`
+5. `POST /users/:userId/workouts/completed`
+6. `POST /users/:userId/workouts/missed`
 
 ## Main Product Endpoints
 
@@ -206,6 +236,24 @@ Response:
     "userId": "user_1",
     "asOf": "2026-03-24",
     "plannedWorkoutType": "lower_body",
+    "readinessModel": {
+      "source": "objective_signals_only",
+      "score": 54.6,
+      "band": "moderate",
+      "dataConfidence": "medium",
+      "dataConfidenceScore": 57,
+      "summary": "Objective signals support training, but not the highest-pressure version of the day.",
+      "signalScores": {
+        "recovery": 49.7,
+        "comparableHistory": 62,
+        "leadingFatigue": 68,
+        "sessionDemand": 70
+      },
+      "reasons": [
+        "Glutes is still the biggest recovery limiter today.",
+        "This score is leaning more on current recovery than on deep comparable history."
+      ]
+    },
     "sessionDecision": {
       "status": "train_modified",
       "summary": "Train, but make the session slightly easier to recover from.",
@@ -269,13 +317,17 @@ This is the simplest shape for a phone test flow:
 
 - muscle load from recent sessions
 - overworked muscles
+- objective readiness score with confidence and signal breakdown
 - session-level coaching decisions
+- frontend-ready explanation of what changed, why, what week pattern the day sits inside, and what to focus on
 - session-plan blocks
 - substitution suggestions when a riskier exercise can be swapped for a safer one with a similar training effect
 - recovering muscles
 - muscle groups to avoid today
 - exercises to avoid today
 - safer alternatives
+
+Each `today-readiness` request also writes a lightweight readiness-history snapshot for that user, so the app can later show what decision the backend surfaced on each day.
 
 Example:
 
@@ -290,11 +342,47 @@ Response:
   "userId": "user_1",
   "asOf": "2026-03-24",
   "plannedWorkoutType": "lower_body",
+  "readinessModel": {
+    "source": "objective_signals_only",
+    "score": 54.6,
+    "band": "moderate",
+    "dataConfidence": "medium",
+    "dataConfidenceScore": 57,
+    "summary": "Objective signals support training, but not the highest-pressure version of the day.",
+    "signalScores": {
+      "recovery": 49.7,
+      "comparableHistory": 62,
+      "leadingFatigue": 68,
+      "sessionDemand": 70
+    },
+    "reasons": [
+      "Glutes is still the biggest recovery limiter today.",
+      "This score is leaning more on current recovery than on deep comparable history."
+    ]
+  },
   "frontendCopy": {
     "sessionLabel": "Modified session",
-    "readinessHeadline": "Train, but keep the overlap under control.",
+    "readinessHeadline": "Train, but keep the overlap under control. The last few weeks have been up and down, so keep today steady.",
     "primaryAction": "Start with leg extension. That is your best fit today.",
     "fallbackNote": "This is the cleanest option the backend sees for today."
+  },
+  "frontendExplanation": {
+    "planWhy": "Keep the lower-body session, but shift the work toward lower-fatigue leg options.",
+    "whatChangedToday": "The day stayed in place, but the backend shifted the work away from the main recovery bottlenecks.",
+    "weekContext": "This day sits inside an up-and-down stretch, so the goal is to make the pattern feel steadier.",
+    "whyTodayLooksThisWay": [
+      "Spinal erectors, glutes, and hamstrings are still the main recovery watch-points.",
+      "Safer options today are calf raise or leg extension.",
+      "Glutes is still the biggest recovery limiter today."
+    ],
+    "focusAreas": [
+      "Quad-dominant lower-body work",
+      "Stable lower-body accessory work"
+    ],
+    "cautionAreas": [
+      "Limit overlap on spinal erectors, glutes, and hamstrings."
+    ],
+    "startingExercises": ["Leg Extension", "Calf Raise"]
   },
   "sessionDecision": {
     "status": "train_modified",
@@ -434,11 +522,136 @@ Response:
 }
 ```
 
+### `GET /users/:userId/readiness-history`
+
+Use this when the frontend needs the saved daily coaching snapshots for a user.
+
+Example:
+
+```bash
+curl "http://localhost:3000/users/user_1/readiness-history"
+```
+
+Response:
+
+```json
+{
+  "userId": "user_1",
+  "readinessHistory": [
+    {
+      "userId": "user_1",
+      "asOf": "2026-03-24",
+      "recordedAt": "2026-03-24T08:30:00.000Z",
+      "plannedWorkoutType": "lower_body",
+      "sessionStyle": "modified",
+      "sessionDecisionStatus": "train_modified",
+      "readinessScore": 54.6,
+      "readinessBand": "moderate",
+      "dataConfidence": "medium",
+      "frontendCopy": {
+        "sessionLabel": "Modified session",
+        "readinessHeadline": "Train, but keep the overlap under control.",
+        "primaryAction": "Start with leg extension. That is your best fit today.",
+        "fallbackNote": "This is the cleanest option the backend sees for today."
+      },
+      "frontendExplanation": {
+        "planWhy": "Keep the lower-body session, but shift the work toward lower-fatigue leg options.",
+        "whatChangedToday": "The day stayed in place, but the backend shifted the work away from the main recovery bottlenecks.",
+        "whyTodayLooksThisWay": [
+          "Spinal erectors, glutes, and hamstrings are still the main recovery watch-points."
+        ],
+        "focusAreas": ["Quad-dominant lower-body work"],
+        "cautionAreas": ["Limit overlap on spinal erectors, glutes, and hamstrings."],
+        "startingExercises": ["Leg Extension", "Calf Raise"]
+      },
+      "focusMuscles": ["quads", "calves", "glute_meds"],
+      "limitMuscles": ["spinal_erectors", "glutes", "hamstrings"],
+      "overworkedMuscles": ["glutes", "hamstrings", "spinal_erectors"],
+      "recoveringMuscles": ["quads", "adductors", "core"],
+      "muscleGroupsToAvoidToday": ["spinal_erectors", "glutes", "hamstrings"],
+      "primaryExerciseIds": ["leg_extension", "calf_raise"]
+    }
+  ]
+}
+```
+
+### `GET /users/:userId/app-state?asOf=YYYY-MM-DD`
+
+This is the main Lovable screen-load endpoint.
+
+Lovable should use this endpoint when it wants one backend-owned payload that
+already aligns:
+
+- user profile
+- Kai/dashboard payload
+- today-readiness coaching payload
+
+This is the cleanest browser/frontend fetch because it removes the need for
+Lovable to separately coordinate `kai` and `today-readiness`.
+
+Example:
+
+```bash
+curl "http://localhost:3000/users/user_1/app-state?asOf=2026-03-24"
+```
+
+Response:
+
+```json
+{
+  "userId": "user_1",
+  "asOf": "2026-03-24",
+  "profile": {
+    "userId": "user_1",
+    "name": "Oliver",
+    "goal": "build_consistency",
+    "experienceLevel": "beginner"
+  },
+  "kaiPayload": {
+    "userId": "user_1",
+    "asOf": "2026-03-24",
+    "plannedWorkoutForDay": {
+      "type": "full_body"
+    },
+    "kai": {
+      "text": "Oliver, keep today simple and repeatable."
+    }
+  },
+  "todayReadiness": {
+    "userId": "user_1",
+    "asOf": "2026-03-24",
+    "plannedWorkoutType": "full_body",
+    "frontendCopy": {
+      "sessionLabel": "Normal session",
+      "readinessHeadline": "Train as planned.",
+      "primaryAction": "Start with leg press."
+    },
+    "decisionAudit": {
+      "dayOrigin": "planned",
+      "recommendedTrainingDirection": "Run the full-body day as planned."
+    }
+  }
+}
+```
+
+Lovable should treat:
+
+- `profile` as the saved user settings layer
+- `kaiPayload` as the home/dashboard layer
+- `todayReadiness` as the daily coaching / decision layer
+
+Note:
+
+- each `app-state` request also saves the same lightweight readiness-history
+  snapshot that `today-readiness` saves
+- use `today-readiness` directly only when Lovable needs a readiness-only refresh
+  rather than a full screen load
+
 ### `GET /users/:userId/kai?asOf=YYYY-MM-DD`
 
-This is the main dashboard endpoint.
+This is the focused Kai/dashboard endpoint.
 
-Lovable should use this endpoint to render the Kai/home experience.
+Use it when Lovable only needs the Kai/dashboard layer, not the full app state.
 
 This payload also includes:
 
@@ -542,7 +755,15 @@ Request:
 {
   "name": "Oliver",
   "goal": "build_consistency",
-  "experienceLevel": "beginner"
+  "experienceLevel": "beginner",
+  "trainingStylePreference": "balanced",
+  "confidenceLevel": "building",
+  "equipment": "gym",
+  "focusMuscles": ["chest", "lats"],
+  "favoriteExerciseIds": ["barbell_bench_press", "lat_pulldown"],
+  "dislikedExerciseIds": ["burpee"],
+  "painFlags": ["front_delts"],
+  "constraints": ["short_on_time"]
 }
 ```
 
@@ -557,8 +778,17 @@ Response:
     "userId": "user_1",
     "name": "Oliver",
     "goal": "build_consistency",
-    "experienceLevel": "beginner"
+    "experienceLevel": "beginner",
+    "trainingStylePreference": "balanced",
+    "confidenceLevel": "building",
+    "equipmentAccess": "full_gym",
+    "focusMuscles": ["chest", "lats"],
+    "favoriteExerciseIds": ["barbell_bench_press", "lat_pulldown"],
+    "dislikedExerciseIds": ["burpee"],
+    "painFlags": ["front_delts"],
+    "constraints": ["short_on_time"]
   },
+  "onboardingOptions": {},
   "kaiPayload": {}
 }
 ```
@@ -566,6 +796,61 @@ Response:
 Note:
 
 - `kaiPayload` is the same shape returned by `GET /users/:userId/kai`
+- `onboardingOptions` is the same shape returned by `GET /profile-options`
+
+### `GET /profile-options`
+
+Use this to build onboarding or profile-editing forms without hardcoding enums in the frontend.
+
+Response:
+
+```json
+{
+  "version": 1,
+  "fields": [
+    {
+      "key": "goal",
+      "label": "Goal",
+      "type": "single_select",
+      "options": [
+        { "value": "build_consistency", "label": "Build consistency" },
+        { "value": "build_muscle", "label": "Build muscle" }
+      ]
+    },
+    {
+      "key": "trainingStylePreference",
+      "label": "Preferred training style",
+      "type": "single_select",
+      "options": [
+        { "value": "balanced", "label": "Balanced" },
+        { "value": "full_body", "label": "Full body" },
+        { "value": "split_routine", "label": "Split routine" }
+      ]
+    },
+    {
+      "key": "favoriteExerciseIds",
+      "label": "Favorite exercises",
+      "type": "multi_select",
+      "source": "exercise-library"
+    }
+  ]
+}
+```
+
+Important fields now supported by the backend:
+
+- `trainingStylePreference`
+- `confidenceLevel`
+- `favoriteExerciseIds`
+- `dislikedExerciseIds`
+- `painFlags`
+
+These fields affect real coaching behavior:
+
+- weekly plan size and split choice
+- progression intent
+- day-level exercise ranking
+- avoidance of sensitive or disliked movements
 
 ### `POST /users/:userId/workouts/completed`
 
@@ -636,6 +921,7 @@ Returns the seeded exercise library used for session analysis, recovery logic, a
 
 Returns:
 
+- `readinessModel`
 - `muscleLoadSummary`
 - `movementPatternSummary`
 - `overworkedMuscles`
@@ -653,6 +939,14 @@ This endpoint returns:
 
 - `weeklyState`
 - `weeklySummary`
+- `weeklyReview`
+- `weeklyInsights`
+- `weeklyChapter`
+- `weeklyArc`
+- `weeklyReadinessHistory`
+- `recentExerciseHistory`
+- `weeklyPerformanceSignals`
+- `weeklyProgressionHighlights`
 - `nextPlannedWorkout`
 - `kai`
 
@@ -660,6 +954,53 @@ The `weeklySummary` object includes:
 
 - `weekStatus`
 - `planAdherencePercent`
+
+`weeklyReadinessHistory` contains the saved daily readiness snapshots for the current week only. This is the clean bridge between daily coaching and the weekly recap layer.
+
+`weeklyChapter` is the frontend-ready narrative layer for the recap screen. It packages the same weekly truth into:
+
+- `title`
+- `summary`
+- `storyBeats`
+- `wins`
+- `frictions`
+- `nextChapter`
+
+`weeklyArc` is the multi-week layer. It summarizes the recent pattern across saved weekly chapters, with fields like:
+
+- `pattern`
+- `headline`
+- `summary`
+- `recentStates`
+- `recentChapterTitles`
+
+`recentExerciseHistory` now includes lightweight progression tracking for recent lifts, including:
+
+- `signalSource`
+- `latestPerformanceScore`
+- `baselinePerformanceScore`
+- `performanceDeltaPercent`
+- `progressionVelocity`
+- `latestWasPersonalBest`
+- `personalBestCount`
+
+`weeklyPerformanceSignals` is the frontend-ready shortlist for weekly lift progress. It only includes recent lifts that actually moved in a meaningful way or hit a new best, so the recap layer can surface real progress without digging through the whole history.
+
+Each `kai-weekly` request also writes a lightweight weekly-chapter-history snapshot for that user, so the app can build real multi-week narrative arcs later without recomputing exactly what was shown before.
+
+### `GET /users/:userId/weekly-chapter-history`
+
+Use this when Lovable needs past weekly recap chapters, not just the current week.
+
+Example:
+
+```bash
+curl "http://localhost:3000/users/user_1/weekly-chapter-history"
+```
+
+Returns:
+
+- `weeklyChapterHistory`
 
 Example:
 
@@ -747,8 +1088,11 @@ Usually with HTTP status `422`.
 
 Lovable should mainly use:
 
+- `GET /users/:userId/app-state`
 - `GET /users/:userId/kai`
+- `GET /users/:userId/today-readiness`
 - `GET /users/:userId/kai-weekly`
+- `GET /profile-options`
 - `POST /users/:userId/profile`
 - `POST /users/:userId/workouts/completed`
 - `POST /users/:userId/workouts/missed`
@@ -773,19 +1117,59 @@ Supported test scenarios:
 - `mixed_week`
 - `momentum_week`
 - `missed_plan_reset`
-- `upper_push_fatigued`
+- `suggested_upper_pull_bias`
+- `thin_history_pain_limited_upper`
+- `thin_history_equipment_limited_upper`
 - `posterior_chain_fatigued`
+- `upper_push_fatigued`
+- `push_day_fatigued`
+- `pull_day_fatigued`
+- `quad_dominant_fatigued`
 
 ## Frontend Guidance
 
 Recommended Lovable flow:
 
-1. Load dashboard with `GET /users/:userId/kai`
-2. Render `kaiPayload.kai` or `kai`
+1. Load the main screen with `GET /users/:userId/app-state?asOf=...`
+2. Render:
+   - `appState.profile`
+   - `appState.kaiPayload`
+   - `appState.todayReadiness`
 3. When user completes/misses a workout:
    - call the relevant write endpoint
-   - update the screen from the returned `kaiPayload`
-4. Only call `GET /users/:userId/workouts` when rendering full history
-5. Use `GET /users/:userId/kai-weekly` for a weekly recap surface, not for the main daily dashboard
+   - refresh the screen from `GET /users/:userId/app-state?asOf=...`
+4. Only call `GET /users/:userId/today-readiness` when the UI needs a lighter
+   readiness-only refresh
+5. Only call `GET /users/:userId/workouts` when rendering full history
+6. Use `GET /users/:userId/kai-weekly` for a weekly recap surface, not for the main daily dashboard
 
 This keeps the frontend simple and lets the backend stay the source of truth.
+
+For the recommended first Lovable screen set and layout, see
+[docs/lovable-ui-build-plan.md](/Users/olivergilder/Documents/Bask_start/docs/lovable-ui-build-plan.md).
+
+Minimal Lovable fetch shape:
+
+```ts
+const response = await fetch(
+  `${BACKEND_URL}/users/${userId}/app-state?asOf=${asOf}`,
+  {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json"
+    }
+  }
+);
+
+if (!response.ok) {
+  throw new Error(`App-state request failed: ${response.status}`);
+}
+
+const appState = await response.json();
+
+renderProfile(appState.profile);
+renderKai(appState.kaiPayload);
+renderTodayReadiness(appState.todayReadiness);
+```
+
+That is the main integration shape Lovable should start from.

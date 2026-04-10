@@ -6,6 +6,8 @@ import { loadJsonFile, saveJsonFile } from "./storage.js";
 
 export interface PlannedWorkoutStore {
   getPlannedWorkouts(userId: string): PlannedWorkout[];
+  exportPlannedWorkoutsState(): Record<string, PlannedWorkout[]>;
+  replacePlannedWorkoutsState(nextState: Record<string, PlannedWorkout[]>): void;
   findPlannedWorkout(userId: string, date: string, type?: string): PlannedWorkout | undefined;
   findNextPlannedWorkout(userId: string, asOf: string): PlannedWorkout | undefined;
   findNextPlannedWorkoutAfter(
@@ -14,6 +16,12 @@ export interface PlannedWorkoutStore {
     excludePlannedWorkoutId?: string
   ): PlannedWorkout | undefined;
   savePlannedWorkout(input: PlannedWorkoutInput): PlannedWorkout[];
+  replacePlannedWorkoutsInRange(
+    userId: string,
+    startDate: string,
+    endDate: string,
+    inputs: PlannedWorkoutInput[]
+  ): PlannedWorkout[];
   clearPlannedWorkouts(userId: string): void;
 }
 
@@ -34,6 +42,22 @@ export function createPlannedWorkoutStore(
       return [...(plannedWorkoutsByUser[userId] ?? [])].sort((a, b) =>
         b.date.localeCompare(a.date)
       );
+    },
+    exportPlannedWorkoutsState() {
+      return structuredClone(plannedWorkoutsByUser);
+    },
+    replacePlannedWorkoutsState(nextState) {
+      for (const key of Object.keys(plannedWorkoutsByUser)) {
+        delete plannedWorkoutsByUser[key];
+      }
+
+      for (const [userId, plannedWorkouts] of Object.entries(nextState)) {
+        plannedWorkoutsByUser[userId] = [...plannedWorkouts].sort((a, b) =>
+          b.date.localeCompare(a.date)
+        );
+      }
+
+      saveJsonFile(options.storageFilePath, plannedWorkoutsByUser);
     },
     findPlannedWorkout(userId, date, type) {
       const plannedWorkouts = plannedWorkoutsByUser[userId] ?? [];
@@ -67,6 +91,17 @@ export function createPlannedWorkoutStore(
       const next = [...filtered, input].sort((a, b) => b.date.localeCompare(a.date));
 
       plannedWorkoutsByUser[input.userId] = next;
+      saveJsonFile(options.storageFilePath, plannedWorkoutsByUser);
+      return next;
+    },
+    replacePlannedWorkoutsInRange(userId, startDate, endDate, inputs) {
+      const current = plannedWorkoutsByUser[userId] ?? [];
+      const kept = current.filter(
+        (workout) => workout.date < startDate || workout.date > endDate
+      );
+      const next = [...kept, ...inputs].sort((a, b) => b.date.localeCompare(a.date));
+
+      plannedWorkoutsByUser[userId] = next;
       saveJsonFile(options.storageFilePath, plannedWorkoutsByUser);
       return next;
     },

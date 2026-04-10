@@ -2,15 +2,22 @@ import { buildKaiMemory } from "../kai/memory.js";
 import type {
   BehaviorSignals,
   KaiMemory,
-  KaiUserProfile
+  KaiRecentEvent,
+  KaiUserProfile,
+  WorkoutRecord
 } from "../kai/types.js";
 import { loadJsonFile, saveJsonFile } from "./storage.js";
 
 export interface MemoryStore {
   getMemory(userId: string): KaiMemory | undefined;
+  exportMemoryState(): Record<string, KaiMemory>;
+  replaceMemoryState(nextState: Record<string, KaiMemory>): void;
   updateMemory(input: {
     profile: KaiUserProfile;
     signals: BehaviorSignals;
+    recentEvent?: KaiRecentEvent;
+    latestCompletedWorkout?: WorkoutRecord;
+    workouts?: WorkoutRecord[];
     asOf: string;
   }): KaiMemory;
 }
@@ -31,11 +38,28 @@ export function createMemoryStore(
     getMemory(userId) {
       return memories[userId];
     },
+    exportMemoryState() {
+      return { ...memories };
+    },
+    replaceMemoryState(nextState) {
+      for (const key of Object.keys(memories)) {
+        delete memories[key];
+      }
+
+      for (const [userId, memory] of Object.entries(nextState)) {
+        memories[userId] = memory;
+      }
+
+      saveJsonFile(options.storageFilePath, memories);
+    },
     updateMemory(input) {
       const nextMemory = buildKaiMemory({
         profile: input.profile,
         signals: input.signals,
         previousMemory: memories[input.profile.userId],
+        recentEvent: input.recentEvent,
+        latestCompletedWorkout: input.latestCompletedWorkout,
+        workouts: input.workouts,
         asOf: input.asOf
       });
 

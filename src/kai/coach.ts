@@ -6,6 +6,7 @@ import type {
   KaiPlanMatch,
   KaiRecentEvent,
   KaiUserProfile,
+  KaiWeeklyPlanContext,
   PlannedWorkout
 } from "./types.js";
 import type { TrainingReadinessReport } from "../exercises/types.js";
@@ -18,7 +19,8 @@ export function buildKaiCoachingMessage(
   planMatch?: KaiPlanMatch,
   plannedWorkoutForDay?: PlannedWorkout,
   nextPlannedWorkout?: PlannedWorkout,
-  trainingReadiness?: TrainingReadinessReport
+  trainingReadiness?: TrainingReadinessReport,
+  weeklyPlanContext?: KaiWeeklyPlanContext
 ): KaiCoachingMessage {
   const name = profile?.name ?? "there";
   const goal = profile?.goal ?? "build_consistency";
@@ -41,6 +43,7 @@ export function buildKaiCoachingMessage(
       : memory?.consistencyRisk === "medium"
         ? " It still needs one more clean rep."
         : "";
+  const recoveryActionStep = memory?.nextRecoveryAction?.detail;
   const missesOutweighCompletions =
     signals.recentMissedCount > signals.recentCompletedCount;
   const heavyMissPattern = signals.recentMissedCount >= 3;
@@ -85,26 +88,46 @@ export function buildKaiCoachingMessage(
   const plannedWorkoutReadinessGuidance = plannedWorkoutForDay
     ? buildPlannedWorkoutReadinessGuidance(trainingReadiness, plannedWorkoutForDay)
     : undefined;
+  const weeklyReasonContext = buildWeeklyReasonContext(weeklyPlanContext);
+  const sessionPatternReasonContext = buildSessionPatternReasonContext(memory);
+  const weeklyProgressStep = buildWeeklyProgressStep(weeklyPlanContext);
+  const weeklyResetStep = buildWeeklyResetStep(weeklyPlanContext);
+  const weeklyReplanPrefix = buildWeeklyReplanPrefix(weeklyPlanContext);
 
   if (plannedWorkoutForDayLabel && !hasLoggedWorkoutForDay) {
     if (plannedWorkoutReadinessGuidance) {
       return createMessage(
         "start",
-        supportiveTone
+        appendSentence(
+          supportiveTone
           ? `${name}, your planned workout today is ${plannedWorkoutForDayLabel}. Keep it, but ${plannedWorkoutReadinessGuidance.text}`
           : `${name}, today's planned workout is ${plannedWorkoutForDayLabel}. Keep it, but ${plannedWorkoutReadinessGuidance.text}`,
-        plannedWorkoutReadinessGuidance.reason,
-        plannedWorkoutReadinessGuidance.nextStep
+          weeklyReplanPrefix
+        ),
+        appendSentence(
+          plannedWorkoutReadinessGuidance.reason,
+          mergeReasonContexts(weeklyReasonContext, sessionPatternReasonContext)
+        ),
+        appendSentence(plannedWorkoutReadinessGuidance.nextStep, weeklyProgressStep)
       );
     }
 
     return createMessage(
       "start",
-      supportiveTone
+      appendSentence(
+        supportiveTone
         ? `${name}, your planned workout today is ${plannedWorkoutForDayLabel}. Use this one as the reset point and get it done.`
         : `${name}, today's planned workout is ${plannedWorkoutForDayLabel}. Show up for it and get the pattern moving again.`,
-      "You have a planned workout today and no result logged for it yet.",
-      `Start with ${plannedWorkoutForDayLabel} and focus on finishing it, not perfecting it.`
+        weeklyReplanPrefix
+      ),
+      appendSentence(
+        "You have a planned workout today and no result logged for it yet.",
+        mergeReasonContexts(weeklyReasonContext, sessionPatternReasonContext)
+      ),
+      appendSentence(
+        `Start with ${plannedWorkoutForDayLabel} and focus on finishing it, not perfecting it.`,
+        weeklyProgressStep
+      )
     );
   }
 
@@ -118,9 +141,12 @@ export function buildKaiCoachingMessage(
         signals.currentStreak === 3
           ? "You have turned recent workouts into a real streak."
           : "You have stacked enough sessions to create real momentum.",
-        signals.currentStreak === 3
-          ? nextPlannedWorkoutStep ?? "Treat the next workout like a normal rep and make it four."
-          : "Treat the next workout like a normal rep and keep the streak alive."
+        appendSentence(
+          signals.currentStreak === 3
+            ? nextPlannedWorkoutStep ?? "Treat the next workout like a normal rep and make it four."
+            : "Treat the next workout like a normal rep and keep the streak alive.",
+          weeklyProgressStep
+        )
       );
     }
 
@@ -137,7 +163,7 @@ export function buildKaiCoachingMessage(
         matchedPlanned
           ? `You followed the plan today, but recent misses still outweigh the wins.${riskReasonSuffix}`
           : `You completed the latest workout, but recent misses still outweigh the wins.${riskReasonSuffix}`,
-        restartStep
+        appendSentence(recoveryActionStep ?? restartStep, weeklyResetStep)
       );
     }
 
@@ -161,14 +187,26 @@ export function buildKaiCoachingMessage(
               : `${name}, good bounce-back with that ${workoutType} session. Now back it up before the rhythm slips again.`,
         lightMixedPattern
           ? matchedPlanned
-            ? "You followed the plan and are moving in the right direction, but the pattern is not stable yet."
-            : "You are moving in the right direction, but the pattern is not stable yet."
+            ? appendSentence(
+                "You followed the plan and are moving in the right direction, but the pattern is not stable yet.",
+                sessionPatternReasonContext
+              )
+            : appendSentence(
+                "You are moving in the right direction, but the pattern is not stable yet.",
+                sessionPatternReasonContext
+              )
           : matchedPlanned
-            ? "You got the planned session done, but the recent pattern is still mixed."
-            : "You got a workout done, but the recent pattern is still mixed.",
+            ? appendSentence(
+                "You got the planned session done, but the recent pattern is still mixed.",
+                sessionPatternReasonContext
+              )
+            : appendSentence(
+                "You got a workout done, but the recent pattern is still mixed.",
+                sessionPatternReasonContext
+              ),
         lightMixedPattern
           ? "Try to complete the next scheduled workout so this turns into momentum."
-          : repeatableStep
+          : appendSentence(repeatableStep, weeklyProgressStep)
       );
     }
 
@@ -180,8 +218,11 @@ export function buildKaiCoachingMessage(
           : `${name}, that ${workoutType} session counts. Keep the next one simple and repeatable.`,
         matchedPlanned
           ? "You completed the workout you intended to do today."
-          : "You completed your latest workout and are moving in the right direction.",
-        nextPlannedWorkoutStep ?? repeatableStep
+          : appendSentence(
+              "You completed your latest workout and are moving in the right direction.",
+              sessionPatternReasonContext
+            ),
+        appendSentence(nextPlannedWorkoutStep ?? repeatableStep, weeklyProgressStep)
       );
     }
 
@@ -192,8 +233,11 @@ export function buildKaiCoachingMessage(
         : `${name}, solid ${workoutType} session. Stay in rhythm and stack the next one.`,
       matchedPlanned
         ? "You completed the session you planned, which keeps the routine honest."
-        : "You completed your latest workout and kept the routine moving.",
-      nextPlannedWorkoutStep ?? repeatableStep
+        : appendSentence(
+            "You completed your latest workout and kept the routine moving.",
+            sessionPatternReasonContext
+          ),
+      appendSentence(nextPlannedWorkoutStep ?? repeatableStep, weeklyProgressStep)
     );
   }
 
@@ -207,12 +251,24 @@ export function buildKaiCoachingMessage(
             ? `${name}, this week needs a reset. Lower the bar and make the next session easy to finish.`
             : `${name}, this week needs a reset. Lower the bar and get the next workout done.`,
         matchedPlanned
-          ? `You missed planned sessions recently, so the restart needs to stay simple and manageable.${riskReasonSuffix}`
-          : `Recent misses have broken the rhythm and you need a simpler restart.${riskReasonSuffix}`,
+          ? appendSentence(
+              `You missed planned sessions recently, so the restart needs to stay simple and manageable.${riskReasonSuffix}`,
+              mergeReasonContexts(weeklyReasonContext, sessionPatternReasonContext)
+            )
+          : appendSentence(
+              `Recent misses have broken the rhythm and you need a simpler restart.${riskReasonSuffix}`,
+              mergeReasonContexts(weeklyReasonContext, sessionPatternReasonContext)
+            ),
         matchedPlanned
-          ? nextPlannedWorkoutResetStep ??
-            "Shrink the next planned workout if needed, then finish it."
-          : "Pick one short workout and focus only on finishing it."
+          ? appendSentence(
+              nextPlannedWorkoutResetStep ??
+                "Shrink the next planned workout if needed, then finish it.",
+              weeklyResetStep
+            )
+          : appendSentence(
+              recoveryActionStep ?? "Pick one short workout and focus only on finishing it.",
+              weeklyResetStep
+            )
       );
     }
 
@@ -229,9 +285,15 @@ export function buildKaiCoachingMessage(
         ? "You missed a planned workout, but the pattern can still recover quickly."
         : "One workout was missed, but the pattern can still recover quickly.",
       matchedPlanned
-        ? nextPlannedWorkoutResetStep ??
-          "Use the next workout as the reset point and complete it."
-        : "Treat the next workout as the response and get it done."
+        ? appendSentence(
+            nextPlannedWorkoutResetStep ??
+              "Use the next workout as the reset point and complete it.",
+            weeklyResetStep
+          )
+        : appendSentence(
+            recoveryActionStep ?? "Treat the next workout as the response and get it done.",
+            weeklyResetStep
+          )
     );
   }
 
@@ -240,7 +302,7 @@ export function buildKaiCoachingMessage(
       "encourage",
       `${name}, you got one done, and that matters. Now the job is rebuilding consistency with the next few workouts.`,
       `You have a win on the board, but the broader pattern is still in recovery.${riskReasonSuffix}`,
-      repeatableStep
+      appendSentence(recoveryActionStep ?? repeatableStep, weeklyResetStep)
     );
   }
 
@@ -250,7 +312,7 @@ export function buildKaiCoachingMessage(
         "reset",
         `${name}, the pattern still needs work. Keep the next few workouts simple and repeatable.`,
         "Your current state still has more misses than wins, even if there is some momentum.",
-        repeatableStep
+        appendSentence(repeatableStep, weeklyResetStep)
       );
     }
 
@@ -259,8 +321,8 @@ export function buildKaiCoachingMessage(
       experienceLevel === "beginner"
         ? `${name}, this is real progress. You are proving you can stay with it.`
         : `${name}, you are building real momentum. Keep the rhythm going.`,
-      "Your recent workouts show consistent follow-through.",
-      "Stay on the same rhythm and protect the routine you have built."
+      appendSentence("Your recent workouts show consistent follow-through.", weeklyReasonContext),
+      appendSentence("Stay on the same rhythm and protect the routine you have built.", weeklyProgressStep)
     );
   }
 
@@ -274,8 +336,14 @@ export function buildKaiCoachingMessage(
           : `${name}, no spiral. Start with one small workout and rebuild from there.`,
       mediumMixedPattern
         ? "You have some wins, but the recent pattern is still unstable."
-        : "You have lost rhythm recently and need a cleaner restart.",
-      "Choose one very manageable workout and complete it before thinking bigger."
+        : appendSentence(
+            "You have lost rhythm recently and need a cleaner restart.",
+            mergeReasonContexts(weeklyReasonContext, sessionPatternReasonContext)
+          ),
+      appendSentence(
+        "Choose one very manageable workout and complete it before thinking bigger.",
+        weeklyResetStep
+      )
     );
   }
 
@@ -285,8 +353,11 @@ export function buildKaiCoachingMessage(
       supportiveTone
         ? `${name}, one workout slipped. That happens. The win now is showing up next time.`
         : `${name}, one workout slipped. The move now is getting the next one done.`,
-      "A missed workout has interrupted the pattern, but it is still recoverable.",
-      "Make the next workout your response."
+      appendSentence(
+        "A missed workout has interrupted the pattern, but it is still recoverable.",
+        weeklyReasonContext
+      ),
+      appendSentence("Make the next workout your response.", weeklyResetStep)
     );
   }
 
@@ -304,7 +375,7 @@ export function buildKaiCoachingMessage(
         lightMixedPattern
           ? `You are improving, but the routine still needs another clean rep.${riskReasonSuffix}`
           : `You have some progress, but the pattern is still uneven.${riskReasonSuffix}`,
-        repeatableStep
+        appendSentence(repeatableStep, weeklyProgressStep)
       );
     }
 
@@ -313,7 +384,7 @@ export function buildKaiCoachingMessage(
         "encourage",
         `${name}, you are still rebuilding. Keep the next workouts small and repeatable.`,
         "You are not fully stable yet, but you are still in a rebuild phase.",
-        repeatableStep
+        appendSentence(repeatableStep, weeklyResetStep)
       );
     }
 
@@ -322,10 +393,13 @@ export function buildKaiCoachingMessage(
       goal === "build_consistency"
         ? `${name}, you are building consistency. Keep the routine simple and repeatable.`
         : `${name}, you are building momentum. Stay steady and keep stacking sessions.`,
-      "Your recent workouts show a positive direction.",
-      goal === "build_consistency"
-        ? "Stick to the same routine and keep it easy to repeat."
-        : "Stay on this pace and get the next session done."
+      appendSentence("Your recent workouts show a positive direction.", weeklyReasonContext),
+      appendSentence(
+        goal === "build_consistency"
+          ? "Stick to the same routine and keep it easy to repeat."
+          : "Stay on this pace and get the next session done.",
+        weeklyProgressStep
+      )
     );
   }
 
@@ -334,8 +408,11 @@ export function buildKaiCoachingMessage(
     supportiveTone
       ? `${name}, start with one workout this week. Small wins are enough right now.`
       : `${name}, get the first session done this week and build from there.`,
-    "There is not enough recent momentum yet, so the focus should be on starting.",
-    "Choose one workout this week and finish it."
+    appendSentence(
+      "There is not enough recent momentum yet, so the focus should be on starting.",
+      weeklyReasonContext
+    ),
+    appendSentence("Choose one workout this week and finish it.", weeklyResetStep)
   );
 }
 
@@ -511,4 +588,376 @@ function buildAccessoryOnlyNextStep(
     coachNote ??
     `Treat today's ${plannedWorkoutForDay.type.replaceAll("_", " ")} session like a small accessory-only day.`
   );
+}
+
+function buildWeeklyReasonContext(
+  weeklyPlanContext: KaiWeeklyPlanContext | undefined
+): string | undefined {
+  if (!weeklyPlanContext) {
+    return undefined;
+  }
+
+  const base = `This week is set up as a ${weeklyPlanContext.targetSessions}-session ${weeklyPlanContext.splitStyle.replaceAll("_", " ")} plan.`;
+  const arcContext = buildWeeklyArcReasonContext(weeklyPlanContext);
+  const progressContext = buildWeeklyProgressReasonContext(weeklyPlanContext);
+  const workoutTypeContext = weeklyPlanContext.fragileWorkoutTypeLabel
+    ? `${weeklyPlanContext.fragileWorkoutTypeLabel} work has been the least stable part of the week.`
+    : undefined;
+  const suggestedWorkoutTypeContext =
+    !weeklyPlanContext.todayPlanned && weeklyPlanContext.suggestedWorkoutTypeLabel
+      ? describeSuggestedWorkoutTypeContext(weeklyPlanContext)
+      : undefined;
+
+  if (weeklyPlanContext.currentWeekReplan?.active) {
+    return [
+      base,
+      arcContext,
+      progressContext,
+      "The remaining week was already reshaped to stay finishable.",
+      workoutTypeContext,
+      suggestedWorkoutTypeContext
+    ]
+      .filter(Boolean)
+      .join(" ");
+  }
+
+  return [base, arcContext, progressContext, workoutTypeContext, suggestedWorkoutTypeContext]
+    .filter(Boolean)
+    .join(" ");
+}
+
+function buildWeeklyProgressStep(
+  weeklyPlanContext: KaiWeeklyPlanContext | undefined
+): string | undefined {
+  if (!weeklyPlanContext) {
+    return undefined;
+  }
+
+  if (weeklyPlanContext.todayPlanned && weeklyPlanContext.remainingPlannedCount <= 1) {
+    return (
+      buildWeeklyProgressSignalStep(weeklyPlanContext) ??
+      buildWeeklyArcProgressStep(weeklyPlanContext) ??
+      "That keeps the week moving cleanly."
+    );
+  }
+
+  if (weeklyPlanContext.currentWeekReplan?.active) {
+    return (
+      buildWeeklyProgressSignalStep(weeklyPlanContext) ??
+      buildWeeklyArcProgressStep(weeklyPlanContext) ??
+      `That fits the calmer version of this week and keeps ${weeklyPlanContext.currentWeekReplan.affectedPlannedCount} planned workout${weeklyPlanContext.currentWeekReplan.affectedPlannedCount === 1 ? "" : "s"} in play.`
+    );
+  }
+
+  if (weeklyPlanContext.remainingPlannedCount > 1) {
+    const remainingAfterToday = Math.max(weeklyPlanContext.remainingPlannedCount - 1, 0);
+    return (
+      buildWeeklyProgressSignalStep(weeklyPlanContext) ??
+      buildWeeklyArcProgressStep(weeklyPlanContext) ??
+      `That keeps ${remainingAfterToday} more planned workout${remainingAfterToday === 1 ? "" : "s"} available this week.`
+    );
+  }
+
+  return (
+    buildWeeklyProgressSignalStep(weeklyPlanContext) ??
+    buildWeeklyArcProgressStep(weeklyPlanContext)
+  );
+}
+
+function buildWeeklyResetStep(
+  weeklyPlanContext: KaiWeeklyPlanContext | undefined
+): string | undefined {
+  if (!weeklyPlanContext) {
+    return undefined;
+  }
+
+  const workoutTypeStep = weeklyPlanContext.fragileWorkoutTypeLabel
+    ? `Keep ${weeklyPlanContext.fragileWorkoutTypeLabel.toLowerCase()} work especially manageable.`
+    : undefined;
+  const suggestedWorkoutTypeStep =
+    !weeklyPlanContext.todayPlanned && weeklyPlanContext.suggestedWorkoutTypeLabel
+      ? describeSuggestedWorkoutTypeStep(weeklyPlanContext)
+      : undefined;
+  const arcResetStep = buildWeeklyArcResetStep(weeklyPlanContext);
+  const progressResetStep =
+    weeklyPlanContext.weeklyProgressPattern === "flattened_progress"
+      ? "Keep the work simple enough that the key lifts can look cleaner again."
+      : undefined;
+
+  if (weeklyPlanContext.currentWeekReplan?.active) {
+    return [
+      `Follow the reshaped week and keep the remaining ${weeklyPlanContext.remainingPlannedCount} planned workout${weeklyPlanContext.remainingPlannedCount === 1 ? "" : "s"} manageable.`,
+      progressResetStep,
+      arcResetStep,
+      workoutTypeStep,
+      suggestedWorkoutTypeStep
+    ]
+      .filter(Boolean)
+      .join(" ");
+  }
+
+  return [
+    `Keep the remaining ${weeklyPlanContext.remainingPlannedCount} planned workout${weeklyPlanContext.remainingPlannedCount === 1 ? "" : "s"} manageable so the week stays finishable.`,
+    progressResetStep,
+    arcResetStep,
+    workoutTypeStep,
+    suggestedWorkoutTypeStep
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
+function buildWeeklyReplanPrefix(
+  weeklyPlanContext: KaiWeeklyPlanContext | undefined
+): string | undefined {
+  if (!weeklyPlanContext?.currentWeekReplan?.active) {
+    return undefined;
+  }
+
+  return "This week was already reshaped after earlier friction.";
+}
+
+function buildSessionPatternReasonContext(memory: KaiMemory | undefined): string | undefined {
+  const pattern = memory?.sessionPatternMemory;
+  const suggestedDrift = memory?.suggestedWorkoutMemory?.dominantDrift;
+  const suggestedDriftContext =
+    suggestedDrift &&
+    suggestedDrift.occurrences >= 2 &&
+    suggestedDrift.followThroughRate <= 0.4
+      ? `Recent suggested ${suggestedDrift.suggestedWorkoutType.replaceAll("_", " ")} sessions have often turned into ${suggestedDrift.performedWorkoutType.replaceAll("_", " ")} work instead.`
+      : undefined;
+
+  if (!pattern || pattern.structuredPatternConfidence < 0.5) {
+    return suggestedDriftContext;
+  }
+
+  if (pattern.patternLabel === "stable_split" && pattern.commonTransitions.length > 0) {
+    return [
+      `Your recent training has repeated a stable pattern: ${pattern.commonTransitions.join(", ")}.`,
+      suggestedDriftContext
+    ]
+      .filter(Boolean)
+      .join(" ");
+  }
+
+  if (pattern.patternLabel === "alternating_mix" && pattern.dominantWorkoutTypes.length > 0) {
+    return [
+      `Your recent training has been alternating between ${pattern.dominantWorkoutTypes.join(" and ")}.`,
+      suggestedDriftContext
+    ]
+      .filter(Boolean)
+      .join(" ");
+  }
+
+  if (pattern.patternLabel === "repeat_day_by_day") {
+    return [
+      `Your recent training has kept revisiting ${pattern.dominantWorkoutTypes[0] ?? "the same day type"}.`,
+      suggestedDriftContext
+    ]
+      .filter(Boolean)
+      .join(" ");
+  }
+
+  return suggestedDriftContext;
+}
+
+function mergeReasonContexts(
+  ...contexts: Array<string | undefined>
+): string | undefined {
+  const filtered = contexts.filter(Boolean);
+  if (filtered.length === 0) {
+    return undefined;
+  }
+
+  return filtered.join(" ");
+}
+
+function appendSentence(base: string, addition: string | undefined): string {
+  if (!addition) {
+    return base;
+  }
+
+  return `${base} ${addition}`;
+}
+
+function buildWeeklyArcReasonContext(
+  weeklyPlanContext: KaiWeeklyPlanContext
+): string | undefined {
+  const headline = weeklyPlanContext.weeklyArcHeadline;
+
+  switch (weeklyPlanContext.weeklyArcPattern) {
+    case "rebuilding":
+      return headline
+        ? `${headline}. Recent weeks have been settling after a rough patch.`
+        : "Recent weeks have been settling after a rough patch.";
+    case "building":
+      return headline
+        ? `${headline}. Recent weeks have been stacking more cleanly.`
+        : "Recent weeks have been stacking more cleanly.";
+    case "protecting":
+      return headline
+        ? `${headline}. Recent weeks have needed lighter work to stay on track.`
+        : "Recent weeks have needed lighter work to stay on track.";
+    case "oscillating":
+      return headline
+        ? `${headline}. Recent weeks have been up and down, so today should help the pattern settle.`
+        : "Recent weeks have been up and down, so today should help the pattern settle.";
+    case "steady":
+      return headline
+        ? `${headline}. Recent weeks have been fairly even.`
+        : "Recent weeks have been fairly even.";
+    case "starting":
+      return headline
+        ? `${headline}. The bigger pattern is still just getting started.`
+        : "The bigger pattern is still just getting started.";
+    default:
+      return undefined;
+  }
+}
+
+function buildWeeklyArcProgressStep(
+  weeklyPlanContext: KaiWeeklyPlanContext
+): string | undefined {
+  switch (weeklyPlanContext.weeklyArcPattern) {
+    case "rebuilding":
+      return "That helps the rebuild keep moving in the right direction.";
+    case "building":
+      return "That helps keep the stronger run going.";
+    case "steady":
+      return "That helps keep the steady run intact.";
+    case "protecting":
+      return "That helps keep the week manageable while recovery settles.";
+    case "oscillating":
+      return "That helps the pattern settle instead of swinging again.";
+    case "starting":
+      return "That helps turn this into a real pattern.";
+    default:
+      return undefined;
+  }
+}
+
+function buildWeeklyProgressReasonContext(
+  weeklyPlanContext: KaiWeeklyPlanContext
+): string | undefined {
+  switch (weeklyPlanContext.weeklyProgressPattern) {
+    case "quiet_progress":
+      return weeklyPlanContext.weeklyProgressHeadline
+        ? `${weeklyPlanContext.weeklyProgressHeadline}. Even steady weeks can still move forward.`
+        : "This week is still moving in the right direction, even without needing a bigger jump.";
+    case "flattened_progress":
+      return weeklyPlanContext.weeklyProgressHeadline
+        ? `${weeklyPlanContext.weeklyProgressHeadline}. The next clean repeat matters more than adding more.`
+        : "This week needs one cleaner repeat before it builds again.";
+    default:
+      return undefined;
+  }
+}
+
+function describeSuggestedWorkoutTypeContext(
+  weeklyPlanContext: KaiWeeklyPlanContext
+): string {
+  const workoutTypeLabel = weeklyPlanContext.suggestedWorkoutTypeLabel;
+  if (!workoutTypeLabel) {
+    return "";
+  }
+
+  const baseContext = (() => {
+    switch (weeklyPlanContext.suggestedWorkoutReasonLabel) {
+      case "recent_follow_through":
+        return `${workoutTypeLabel} is the cleaner fit from what you have actually been following through on lately.`;
+      case "recent_handling":
+        return `${workoutTypeLabel} is the cleaner fit from what you have been handling best lately.`;
+      default:
+        return `${workoutTypeLabel} is the most natural fit from your recent pattern today.`;
+    }
+  })();
+
+  if (weeklyPlanContext.suggestedWorkoutTemplateNote) {
+    return `${baseContext} ${weeklyPlanContext.suggestedWorkoutTemplateNote}`;
+  }
+
+  return baseContext;
+}
+
+function describeSuggestedWorkoutTypeStep(
+  weeklyPlanContext: KaiWeeklyPlanContext
+): string {
+  const workoutTypeLabel = weeklyPlanContext.suggestedWorkoutTypeLabel?.toLowerCase();
+  if (!workoutTypeLabel) {
+    return "";
+  }
+
+  const baseStep = (() => {
+    switch (weeklyPlanContext.suggestedWorkoutReasonLabel) {
+      case "recent_follow_through":
+        return `If you train today, let it be a manageable ${workoutTypeLabel} session that matches what you have actually been following through on.`;
+      case "recent_handling":
+        return `If you train today, let it be a manageable ${workoutTypeLabel} session that matches what has been landing best lately.`;
+      default:
+        return `If you train today, let it be a manageable ${workoutTypeLabel} session.`;
+    }
+  })();
+
+  const templateStep = describeSuggestedWorkoutTemplateStep(
+    weeklyPlanContext.suggestedWorkoutTemplateNote
+  );
+
+  return templateStep ? `${baseStep} ${templateStep}` : baseStep;
+}
+
+function describeSuggestedWorkoutTemplateStep(
+  templateNote: string | undefined
+): string | undefined {
+  if (!templateNote) {
+    return undefined;
+  }
+
+  const normalized = templateNote.toLowerCase();
+  if (normalized.includes("pull work")) {
+    return "Let the session lean pull-first, since that is the upper-body work you have actually been landing best lately.";
+  }
+
+  if (normalized.includes("press work")) {
+    return "Let the session lean press-first, since that is the upper-body work you have actually been landing best lately.";
+  }
+
+  if (normalized.includes("posterior-chain")) {
+    return "Let the session lean more posterior-chain, since that is the lower-body work you have actually been landing best lately.";
+  }
+
+  if (normalized.includes("quad-focused")) {
+    return "Let the session lean more quad-focused, since that is the lower-body work you have actually been landing best lately.";
+  }
+
+  return undefined;
+}
+
+function buildWeeklyProgressSignalStep(
+  weeklyPlanContext: KaiWeeklyPlanContext
+): string | undefined {
+  switch (weeklyPlanContext.weeklyProgressPattern) {
+    case "quiet_progress":
+      return "That adds to the quiet progress without forcing the week to get bigger.";
+    case "flattened_progress":
+      return "That gives the key lifts another cleaner repeat before you ask for more.";
+    default:
+      return undefined;
+  }
+}
+
+function buildWeeklyArcResetStep(
+  weeklyPlanContext: KaiWeeklyPlanContext
+): string | undefined {
+  switch (weeklyPlanContext.weeklyArcPattern) {
+    case "rebuilding":
+      return "Keep this light enough that the rebuild keeps feeling doable.";
+    case "protecting":
+      return "Keep this light enough that the recent fragile stretch does not flare up again.";
+    case "oscillating":
+      return "Keep this simple enough that the pattern stops swinging around.";
+    case "starting":
+      return "Keep this simple enough that it becomes a repeatable start.";
+    default:
+      return undefined;
+  }
 }

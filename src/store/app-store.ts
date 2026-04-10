@@ -9,6 +9,7 @@ import type {
   BehaviorSignals,
   KaiMemory,
   KaiPlanMatch,
+  KaiWeeklyPlanContext,
   KaiRecentEvent,
   KaiUserProfile,
   KaiCoachingMessage,
@@ -21,6 +22,8 @@ import { loadJsonFile, saveJsonFile } from "./storage.js";
 
 export interface AppStore {
   getWorkouts(userId: string): WorkoutRecord[];
+  exportWorkoutsState(): Record<string, WorkoutRecord[]>;
+  replaceWorkoutsState(nextState: Record<string, WorkoutRecord[]>): void;
   recordCompletedWorkout(input: WorkoutCompletionInput): WorkoutRecord[];
   recordMissedWorkout(input: WorkoutMissedInput): WorkoutRecord[];
   clearWorkouts(userId: string): void;
@@ -34,7 +37,8 @@ export interface AppStore {
     planMatch?: KaiPlanMatch,
     plannedWorkoutForDay?: PlannedWorkout,
     nextPlannedWorkout?: PlannedWorkout,
-    trainingReadiness?: TrainingReadinessReport
+    trainingReadiness?: TrainingReadinessReport,
+    weeklyPlanContext?: KaiWeeklyPlanContext
   ): KaiCoachingMessage;
 }
 
@@ -48,6 +52,24 @@ export function createAppStore(options: AppStoreOptions = {}): AppStore {
   return {
     getWorkouts(userId) {
       return workoutsByUser.get(userId) ?? [];
+    },
+    exportWorkoutsState() {
+      return Object.fromEntries(workoutsByUser.entries());
+    },
+    replaceWorkoutsState(nextState) {
+      workoutsByUser.clear();
+
+      for (const [userId, workouts] of Object.entries(nextState)) {
+        workoutsByUser.set(
+          userId,
+          workouts.map((workout) => ({
+            ...workout,
+            recordedAt: workout.recordedAt ?? `${workout.date}T12:00:00.000Z`
+          }))
+        );
+      }
+
+      persistWorkoutsMap(workoutsByUser, options.storageFilePath);
     },
     recordCompletedWorkout(input) {
       const currentWorkouts = workoutsByUser.get(input.userId) ?? [];
@@ -102,7 +124,8 @@ export function createAppStore(options: AppStoreOptions = {}): AppStore {
       planMatch,
       plannedWorkoutForDay,
       nextPlannedWorkout,
-      trainingReadiness
+      trainingReadiness,
+      weeklyPlanContext
     ) {
       const signals = this.getBehaviorSignals(userId, asOf);
       const recentEvent = this.getRecentEvent(userId, asOf);
@@ -114,7 +137,8 @@ export function createAppStore(options: AppStoreOptions = {}): AppStore {
         planMatch,
         plannedWorkoutForDay,
         nextPlannedWorkout,
-        trainingReadiness
+        trainingReadiness,
+        weeklyPlanContext
       );
     }
   };

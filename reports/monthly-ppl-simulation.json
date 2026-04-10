@@ -1,0 +1,593 @@
+{
+  "summary": {
+    "userId": "sim_intermediate_ppl",
+    "startDate": "2026-03-02",
+    "endDate": "2026-03-29",
+    "totalDays": 28,
+    "plannedTrainingDays": 24,
+    "completedTrainingDays": 24,
+    "restDays": 4,
+    "sessionStyles": {
+      "normal": 17,
+      "accessory_only": 4,
+      "modified": 3
+    },
+    "kaiCategories": {
+      "encourage": 26,
+      "celebrate": 2
+    },
+    "latestConsistencyScore": 100,
+    "latestConsistencyStatus": "consistent",
+    "longestStreak": 24
+  },
+  "days": [
+    {
+      "date": "2026-03-02",
+      "dayName": "Monday",
+      "plannedWorkoutType": "push_day",
+      "sessionStyle": "normal",
+      "completed": true,
+      "completedDuration": 70,
+      "exerciseIds": [
+        "barbell_bench_press",
+        "incline_dumbbell_press",
+        "lateral_raise",
+        "tricep_pushdown"
+      ],
+      "readinessHeadline": "Run the push day as planned.",
+      "sessionSummary": "Train as planned.",
+      "kaiCategory": "encourage",
+      "kaiText": "Mika, solid work. You got the planned push day session done. Stay in rhythm and stack the next one.",
+      "topAvoidMuscles": [],
+      "substitutionTitles": []
+    },
+    {
+      "date": "2026-03-03",
+      "dayName": "Tuesday",
+      "plannedWorkoutType": "pull_day",
+      "sessionStyle": "normal",
+      "completed": true,
+      "completedDuration": 70,
+      "exerciseIds": [
+        "chest_supported_machine_row",
+        "single_arm_cable_row",
+        "shrug",
+        "hammer_curl"
+      ],
+      "readinessHeadline": "Run the pull day as planned.",
+      "sessionSummary": "Train as planned.",
+      "kaiCategory": "encourage",
+      "kaiText": "Mika, solid work. You got the planned pull day session done. Stay in rhythm and stack the next one.",
+      "topAvoidMuscles": [],
+      "substitutionTitles": []
+    },
+    {
+      "date": "2026-03-04",
+      "dayName": "Wednesday",
+      "plannedWorkoutType": "lower_body",
+      "sessionStyle": "normal",
+      "completed": true,
+      "completedDuration": 70,
+      "exerciseIds": [
+        "leg_press",
+        "leg_extension",
+        "calf_raise"
+      ],
+      "readinessHeadline": "Run the lower-body session as planned.",
+      "sessionSummary": "Train as planned.",
+      "kaiCategory": "celebrate",
+      "kaiText": "Mika, that is three in a row. This is how consistency starts feeling real.",
+      "topAvoidMuscles": [],
+      "substitutionTitles": []
+    },
+    {
+      "date": "2026-03-05",
+      "dayName": "Thursday",
+      "plannedWorkoutType": "push_day",
+      "sessionStyle": "normal",
+      "completed": true,
+      "completedDuration": 70,
+      "exerciseIds": [
+        "barbell_bench_press",
+        "incline_dumbbell_press",
+        "lateral_raise",
+        "tricep_pushdown"
+      ],
+      "readinessHeadline": "Run the push day as planned.",
+      "sessionSummary": "Train as planned.",
+      "kaiCategory": "encourage",
+      "kaiText": "Mika, solid work. You got the planned push day session done. Stay in rhythm and stack the next one.",
+      "topAvoidMuscles": [],
+      "substitutionTitles": []
+    },
+    {
+      "date": "2026-03-06",
+      "dayName": "Friday",
+      "plannedWorkoutType": "pull_day",
+      "sessionStyle": "normal",
+      "completed": true,
+      "completedDuration": 70,
+      "exerciseIds": [
+        "chest_supported_machine_row",
+        "single_arm_cable_row",
+        "shrug",
+        "hammer_curl"
+      ],
+      "readinessHeadline": "Run the pull day as planned.",
+      "sessionSummary": "Train as planned.",
+      "kaiCategory": "celebrate",
+      "kaiText": "Mika, five in a row is real momentum. Protect the rhythm.",
+      "topAvoidMuscles": [
+        "chest"
+      ],
+      "substitutionTitles": []
+    },
+    {
+      "date": "2026-03-07",
+      "dayName": "Saturday",
+      "plannedWorkoutType": "lower_body",
+      "sessionStyle": "normal",
+      "completed": true,
+      "completedDuration": 70,
+      "exerciseIds": [
+        "leg_press",
+        "leg_extension",
+        "calf_raise"
+      ],
+      "readinessHeadline": "Run the lower-body session as planned.",
+      "sessionSummary": "Train as planned.",
+      "kaiCategory": "encourage",
+      "kaiText": "Mika, solid work. You got the planned lower body session done. Stay in rhythm and stack the next one.",
+      "topAvoidMuscles": [],
+      "substitutionTitles": []
+    },
+    {
+      "date": "2026-03-08",
+      "dayName": "Sunday",
+      "completed": false,
+      "kaiCategory": "encourage",
+      "kaiText": "Mika, solid work. You got the planned lower body session done. Stay in rhythm and stack the next one."
+    },
+    {
+      "date": "2026-03-09",
+      "dayName": "Monday",
+      "plannedWorkoutType": "push_day",
+      "sessionStyle": "normal",
+      "completed": true,
+      "completedDuration": 70,
+      "exerciseIds": [
+        "barbell_bench_press",
+        "incline_dumbbell_press",
+        "lateral_raise",
+        "tricep_pushdown"
+      ],
+      "readinessHeadline": "Run the push day as planned.",
+      "sessionSummary": "Train as planned.",
+      "kaiCategory": "encourage",
+      "kaiText": "Mika, solid work. You got the planned push day session done. Stay in rhythm and stack the next one.",
+      "topAvoidMuscles": [],
+      "substitutionTitles": []
+    },
+    {
+      "date": "2026-03-10",
+      "dayName": "Tuesday",
+      "plannedWorkoutType": "pull_day",
+      "sessionStyle": "normal",
+      "completed": true,
+      "completedDuration": 70,
+      "exerciseIds": [
+        "chest_supported_machine_row",
+        "single_arm_cable_row",
+        "shrug",
+        "hammer_curl"
+      ],
+      "readinessHeadline": "Run the pull day as planned.",
+      "sessionSummary": "Train as planned.",
+      "kaiCategory": "encourage",
+      "kaiText": "Mika, solid work. You got the planned pull day session done. Stay in rhythm and stack the next one.",
+      "topAvoidMuscles": [
+        "chest",
+        "front_delts"
+      ],
+      "substitutionTitles": []
+    },
+    {
+      "date": "2026-03-11",
+      "dayName": "Wednesday",
+      "plannedWorkoutType": "lower_body",
+      "sessionStyle": "normal",
+      "completed": true,
+      "completedDuration": 70,
+      "exerciseIds": [
+        "leg_press",
+        "leg_extension",
+        "calf_raise"
+      ],
+      "readinessHeadline": "Run the lower-body session as planned.",
+      "sessionSummary": "Train as planned.",
+      "kaiCategory": "encourage",
+      "kaiText": "Mika, solid work. You got the planned lower body session done. Stay in rhythm and stack the next one.",
+      "topAvoidMuscles": [],
+      "substitutionTitles": []
+    },
+    {
+      "date": "2026-03-12",
+      "dayName": "Thursday",
+      "plannedWorkoutType": "push_day",
+      "sessionStyle": "normal",
+      "completed": true,
+      "completedDuration": 70,
+      "exerciseIds": [
+        "barbell_bench_press",
+        "incline_dumbbell_press",
+        "lateral_raise",
+        "tricep_pushdown"
+      ],
+      "readinessHeadline": "Run the push day as planned.",
+      "sessionSummary": "Train as planned.",
+      "kaiCategory": "encourage",
+      "kaiText": "Mika, solid work. You got the planned push day session done. Stay in rhythm and stack the next one.",
+      "topAvoidMuscles": [],
+      "substitutionTitles": []
+    },
+    {
+      "date": "2026-03-13",
+      "dayName": "Friday",
+      "plannedWorkoutType": "pull_day",
+      "sessionStyle": "normal",
+      "completed": true,
+      "completedDuration": 70,
+      "exerciseIds": [
+        "chest_supported_machine_row",
+        "single_arm_cable_row",
+        "shrug",
+        "hammer_curl"
+      ],
+      "readinessHeadline": "Run the pull day as planned.",
+      "sessionSummary": "Train as planned.",
+      "kaiCategory": "encourage",
+      "kaiText": "Mika, solid work. You got the planned pull day session done. Stay in rhythm and stack the next one.",
+      "topAvoidMuscles": [
+        "chest",
+        "front_delts"
+      ],
+      "substitutionTitles": []
+    },
+    {
+      "date": "2026-03-14",
+      "dayName": "Saturday",
+      "plannedWorkoutType": "lower_body",
+      "sessionStyle": "normal",
+      "completed": true,
+      "completedDuration": 70,
+      "exerciseIds": [
+        "leg_extension",
+        "leg_press",
+        "calf_raise"
+      ],
+      "readinessHeadline": "Run the lower-body session as planned.",
+      "sessionSummary": "Train as planned.",
+      "kaiCategory": "encourage",
+      "kaiText": "Mika, solid work. You got the planned lower body session done. Stay in rhythm and stack the next one.",
+      "topAvoidMuscles": [
+        "mid_traps",
+        "chest",
+        "rhomboids"
+      ],
+      "substitutionTitles": [
+        "Swap Deadlift (Conventional) today"
+      ]
+    },
+    {
+      "date": "2026-03-15",
+      "dayName": "Sunday",
+      "completed": false,
+      "kaiCategory": "encourage",
+      "kaiText": "Mika, solid work. You got the planned lower body session done. Stay in rhythm and stack the next one."
+    },
+    {
+      "date": "2026-03-16",
+      "dayName": "Monday",
+      "plannedWorkoutType": "push_day",
+      "sessionStyle": "normal",
+      "completed": true,
+      "completedDuration": 70,
+      "exerciseIds": [
+        "barbell_bench_press",
+        "incline_dumbbell_press",
+        "lateral_raise",
+        "tricep_pushdown"
+      ],
+      "readinessHeadline": "Run the push day as planned.",
+      "sessionSummary": "Train as planned.",
+      "kaiCategory": "encourage",
+      "kaiText": "Mika, solid work. You got the planned push day session done. Stay in rhythm and stack the next one.",
+      "topAvoidMuscles": [],
+      "substitutionTitles": []
+    },
+    {
+      "date": "2026-03-17",
+      "dayName": "Tuesday",
+      "plannedWorkoutType": "pull_day",
+      "sessionStyle": "normal",
+      "completed": true,
+      "completedDuration": 70,
+      "exerciseIds": [
+        "pull_up",
+        "assisted_pull_up_machine",
+        "shrug",
+        "hammer_curl"
+      ],
+      "readinessHeadline": "Run the pull day as planned.",
+      "sessionSummary": "Train as planned.",
+      "kaiCategory": "encourage",
+      "kaiText": "Mika, solid work. You got the planned pull day session done. Stay in rhythm and stack the next one.",
+      "topAvoidMuscles": [
+        "chest",
+        "front_delts",
+        "triceps"
+      ],
+      "substitutionTitles": []
+    },
+    {
+      "date": "2026-03-18",
+      "dayName": "Wednesday",
+      "plannedWorkoutType": "lower_body",
+      "sessionStyle": "normal",
+      "completed": true,
+      "completedDuration": 70,
+      "exerciseIds": [
+        "leg_extension",
+        "leg_press",
+        "calf_raise"
+      ],
+      "readinessHeadline": "Run the lower-body session as planned.",
+      "sessionSummary": "Train as planned.",
+      "kaiCategory": "encourage",
+      "kaiText": "Mika, solid work. You got the planned lower body session done. Stay in rhythm and stack the next one.",
+      "topAvoidMuscles": [
+        "lats",
+        "chest",
+        "mid_traps"
+      ],
+      "substitutionTitles": [
+        "Swap Deadlift (Conventional) today"
+      ]
+    },
+    {
+      "date": "2026-03-19",
+      "dayName": "Thursday",
+      "plannedWorkoutType": "push_day",
+      "sessionStyle": "accessory_only",
+      "completed": true,
+      "completedDuration": 25,
+      "exerciseIds": [
+        "lateral_raise",
+        "tricep_pushdown",
+        "triceps_rope_pushdown"
+      ],
+      "readinessHeadline": "Skip your main pressing work today. Keep only the small push accessories that stay clearly away from the most fatigued overlap.",
+      "sessionSummary": "Keep the session, but reduce overlap with fatigued upper-body work.",
+      "kaiCategory": "encourage",
+      "kaiText": "Mika, solid work. You got the planned push day session done. Stay in rhythm and stack the next one.",
+      "topAvoidMuscles": [
+        "quads",
+        "chest"
+      ],
+      "substitutionTitles": [
+        "Swap Barbell Bench Press today"
+      ]
+    },
+    {
+      "date": "2026-03-20",
+      "dayName": "Friday",
+      "plannedWorkoutType": "pull_day",
+      "sessionStyle": "normal",
+      "completed": true,
+      "completedDuration": 70,
+      "exerciseIds": [
+        "chest_supported_machine_row",
+        "single_arm_cable_row",
+        "shrug",
+        "hammer_curl"
+      ],
+      "readinessHeadline": "Run the pull day as planned.",
+      "sessionSummary": "Train as planned.",
+      "kaiCategory": "encourage",
+      "kaiText": "Mika, solid work. You got the planned pull day session done. Stay in rhythm and stack the next one.",
+      "topAvoidMuscles": [
+        "chest"
+      ],
+      "substitutionTitles": [
+        "Swap Cable Face Pull today"
+      ]
+    },
+    {
+      "date": "2026-03-21",
+      "dayName": "Saturday",
+      "plannedWorkoutType": "lower_body",
+      "sessionStyle": "normal",
+      "completed": true,
+      "completedDuration": 70,
+      "exerciseIds": [
+        "leg_extension",
+        "leg_press",
+        "calf_raise"
+      ],
+      "readinessHeadline": "Run the lower-body session as planned.",
+      "sessionSummary": "Train as planned.",
+      "kaiCategory": "encourage",
+      "kaiText": "Mika, solid work. You got the planned lower body session done. Stay in rhythm and stack the next one.",
+      "topAvoidMuscles": [
+        "mid_traps",
+        "lats",
+        "rhomboids"
+      ],
+      "substitutionTitles": [
+        "Swap Deadlift (Conventional) today"
+      ]
+    },
+    {
+      "date": "2026-03-22",
+      "dayName": "Sunday",
+      "completed": false,
+      "kaiCategory": "encourage",
+      "kaiText": "Mika, solid work. You got the planned lower body session done. Stay in rhythm and stack the next one."
+    },
+    {
+      "date": "2026-03-23",
+      "dayName": "Monday",
+      "plannedWorkoutType": "push_day",
+      "sessionStyle": "accessory_only",
+      "completed": true,
+      "completedDuration": 25,
+      "exerciseIds": [
+        "lateral_raise",
+        "tricep_pushdown",
+        "triceps_rope_pushdown"
+      ],
+      "readinessHeadline": "Skip your main pressing work today. Keep only the small push accessories that stay clearly away from the most fatigued overlap.",
+      "sessionSummary": "Keep the session, but reduce overlap with fatigued upper-body work.",
+      "kaiCategory": "encourage",
+      "kaiText": "Mika, solid work. You got the planned push day session done. Stay in rhythm and stack the next one.",
+      "topAvoidMuscles": [
+        "mid_traps",
+        "chest",
+        "lats"
+      ],
+      "substitutionTitles": [
+        "Swap Barbell Bench Press today"
+      ]
+    },
+    {
+      "date": "2026-03-24",
+      "dayName": "Tuesday",
+      "plannedWorkoutType": "pull_day",
+      "sessionStyle": "accessory_only",
+      "completed": true,
+      "completedDuration": 25,
+      "exerciseIds": [
+        "shrug",
+        "hammer_curl",
+        "preacher_curl"
+      ],
+      "readinessHeadline": "Skip your main pulling work today. Keep only the lightest pull accessories that still feel clearly recoverable.",
+      "sessionSummary": "Keep the session, but reduce overlap with the most fatigued pull work.",
+      "kaiCategory": "encourage",
+      "kaiText": "Mika, solid work. You got the planned pull day session done. Stay in rhythm and stack the next one.",
+      "topAvoidMuscles": [
+        "mid_traps",
+        "triceps",
+        "chest"
+      ],
+      "substitutionTitles": [
+        "Swap Cable Face Pull today"
+      ]
+    },
+    {
+      "date": "2026-03-25",
+      "dayName": "Wednesday",
+      "plannedWorkoutType": "lower_body",
+      "sessionStyle": "modified",
+      "completed": true,
+      "completedDuration": 55,
+      "exerciseIds": [
+        "calf_raise",
+        "leg_curl",
+        "lying_leg_curl"
+      ],
+      "readinessHeadline": "Keep the lower-body session, but shift the work toward lower-fatigue leg options.",
+      "sessionSummary": "Train, but make the session slightly easier to recover from.",
+      "kaiCategory": "encourage",
+      "kaiText": "Mika, solid work. You got the planned lower body session done. Stay in rhythm and stack the next one.",
+      "topAvoidMuscles": [
+        "mid_traps",
+        "triceps",
+        "chest"
+      ],
+      "substitutionTitles": [
+        "Swap Deadlift (Conventional) today"
+      ]
+    },
+    {
+      "date": "2026-03-26",
+      "dayName": "Thursday",
+      "plannedWorkoutType": "push_day",
+      "sessionStyle": "modified",
+      "completed": true,
+      "completedDuration": 55,
+      "exerciseIds": [
+        "lateral_raise",
+        "tricep_pushdown",
+        "cable_chest_fly"
+      ],
+      "readinessHeadline": "Keep the push day, but use the least overlapping press and accessory options.",
+      "sessionSummary": "Keep the session, but reduce overlap with fatigued upper-body work.",
+      "kaiCategory": "encourage",
+      "kaiText": "Mika, solid work. You got the planned push day session done. Stay in rhythm and stack the next one.",
+      "topAvoidMuscles": [
+        "mid_traps",
+        "triceps",
+        "chest"
+      ],
+      "substitutionTitles": []
+    },
+    {
+      "date": "2026-03-27",
+      "dayName": "Friday",
+      "plannedWorkoutType": "pull_day",
+      "sessionStyle": "accessory_only",
+      "completed": true,
+      "completedDuration": 25,
+      "exerciseIds": [
+        "hammer_curl",
+        "rear_delt_fly",
+        "shrug"
+      ],
+      "readinessHeadline": "Skip your main pulling work today. Keep only the lightest pull accessories that still feel clearly recoverable.",
+      "sessionSummary": "Keep the session, but reduce overlap with the most fatigued pull work.",
+      "kaiCategory": "encourage",
+      "kaiText": "Mika, solid work. You got the planned pull day session done. Stay in rhythm and stack the next one.",
+      "topAvoidMuscles": [
+        "chest",
+        "mid_traps",
+        "triceps"
+      ],
+      "substitutionTitles": [
+        "Swap Cable Face Pull today"
+      ]
+    },
+    {
+      "date": "2026-03-28",
+      "dayName": "Saturday",
+      "plannedWorkoutType": "lower_body",
+      "sessionStyle": "modified",
+      "completed": true,
+      "completedDuration": 55,
+      "exerciseIds": [
+        "leg_curl",
+        "calf_raise",
+        "lying_leg_curl"
+      ],
+      "readinessHeadline": "Keep the lower-body session, but shift the work toward lower-fatigue leg options.",
+      "sessionSummary": "Train, but make the session slightly easier to recover from.",
+      "kaiCategory": "encourage",
+      "kaiText": "Mika, solid work. You got the planned lower body session done. Stay in rhythm and stack the next one.",
+      "topAvoidMuscles": [
+        "mid_traps",
+        "chest",
+        "triceps"
+      ],
+      "substitutionTitles": [
+        "Swap Deadlift (Conventional) today"
+      ]
+    },
+    {
+      "date": "2026-03-29",
+      "dayName": "Sunday",
+      "completed": false,
+      "kaiCategory": "encourage",
+      "kaiText": "Mika, solid work. You got the planned lower body session done. Stay in rhythm and stack the next one."
+    }
+  ]
+}

@@ -109,6 +109,40 @@ Example:
 CORS_ALLOW_ORIGINS="https://your-lovable-app.lovable.app,http://localhost:5173" npm start
 ```
 
+### Railway + Lovable
+
+If you want Lovable's hosted preview to reach the backend, deploy this backend to
+Railway and use the Railway public URL as the frontend API base URL.
+
+This server supports Railway's injected port automatically via `process.env.PORT`.
+
+Recommended Railway environment variables:
+
+```bash
+CORS_ALLOW_ORIGINS=*
+```
+
+Use `*` for temporary testing only. Once the app is connected, tighten this to
+the real Lovable origin or origins.
+
+Then point Lovable at:
+
+```text
+https://your-railway-service.up.railway.app
+```
+
+### Recommended Longer Self-Test Setup
+
+For testing Bask from your phone for a while, the recommended setup is:
+
+```text
+Lovable frontend
+Render backend
+Supabase Postgres database
+```
+
+See [docs/deploy-render-supabase.md](/Users/olivergilder/Documents/Bask_start/docs/deploy-render-supabase.md).
+
 Notes:
 
 - use a comma-separated list when you want to allow both Lovable and a local frontend

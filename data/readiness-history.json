@@ -1,0 +1,275 @@
+{
+  "user_1": [
+    {
+      "userId": "user_1",
+      "asOf": "2026-03-24",
+      "recordedAt": "2026-04-09T22:16:57.168Z",
+      "sessionStyle": "normal",
+      "sessionDecisionStatus": "train_as_planned",
+      "readinessScore": 83.3,
+      "readinessBand": "high",
+      "dataConfidence": "low",
+      "frontendCopy": {
+        "sessionLabel": "Normal session",
+        "readinessHeadline": "Train as planned. You are building a steadier base, so keep the rhythm clean.",
+        "primaryAction": "Start with barbell bench press or incline dumbbell press. This is a sensible repeatable place to begin today."
+      },
+      "frontendExplanation": {
+        "planWhy": "Train normally.",
+        "weekContext": "This day sits inside a steadier stretch, so the goal is to keep the routine consistent.",
+        "whyTodayLooksThisWay": [
+          "No major recovery flags are standing out today.",
+          "This score is leaning more on current recovery than on deep comparable history."
+        ],
+        "focusAreas": [
+          "Use the best-fitting lower-overlap work first",
+          "Only add more work if the first block feels good"
+        ],
+        "cautionAreas": [],
+        "startingExercises": [
+          "Barbell Bench Press",
+          "Incline Dumbbell Press"
+        ]
+      },
+      "focusMuscles": [
+        "quads",
+        "chest",
+        "rear_delts"
+      ],
+      "limitMuscles": [],
+      "overworkedMuscles": [],
+      "recoveringMuscles": [],
+      "muscleGroupsToAvoidToday": [],
+      "primaryExerciseIds": [
+        "barbell_bench_press",
+        "incline_dumbbell_press"
+      ],
+      "decisionSnapshot": {
+        "dayOrigin": "unplanned",
+        "decisionSummary": "train_as_planned | normal | high 83",
+        "recommendedTrainingDirection": "Train normally.",
+        "topRecoveryLimiters": [],
+        "musclesToAvoid": [],
+        "movementPatternsToAvoid": [],
+        "primaryExerciseIds": [
+          "barbell_bench_press",
+          "incline_dumbbell_press"
+        ],
+        "selectedSubstituteIds": [
+          "overhead_shoulder_press",
+          "barbell_bent_over_row"
+        ]
+      }
+    },
+    {
+      "userId": "user_1",
+      "asOf": "2026-03-30",
+      "recordedAt": "2026-04-09T22:16:46.990Z",
+      "plannedWorkoutType": "upper_body",
+      "sessionStyle": "conservative",
+      "sessionDecisionStatus": "train_as_planned",
+      "readinessScore": 80,
+      "readinessBand": "high",
+      "dataConfidence": "low",
+      "frontendCopy": {
+        "sessionLabel": "Conservative session",
+        "readinessHeadline": "Train, but keep it lighter than usual. The last few weeks are stacking well, so protect that momentum.",
+        "primaryAction": "Start with barbell bench press or incline dumbbell press. This is a sensible repeatable place to begin today.",
+        "fallbackNote": "This is a sensible default while the backend is still learning your pattern."
+      },
+      "frontendExplanation": {
+        "planWhy": "Run the upper-body day, but keep it easy to repeat.",
+        "whatChangedToday": "The session stayed on the calendar, but the backend cooled the volume and intensity.",
+        "weekContext": "This day sits inside a stronger run of weeks, so the goal is to keep the momentum clean.",
+        "whyTodayLooksThisWay": [
+          "Today is meant to be a lighter session inside the week.",
+          "No major recovery flags are standing out today.",
+          "This score is leaning more on current recovery than on deep comparable history."
+        ],
+        "focusAreas": [
+          "Start with one real upper-body anchor that still fits today",
+          "Add one complementary upper-body pattern if it stays low-cost"
+        ],
+        "cautionAreas": [],
+        "startingExercises": [
+          "Barbell Bench Press",
+          "Incline Dumbbell Press"
+        ]
+      },
+      "focusMuscles": [
+        "chest",
+        "lats",
+        "upper_back"
+      ],
+      "limitMuscles": [],
+      "overworkedMuscles": [],
+      "recoveringMuscles": [],
+      "muscleGroupsToAvoidToday": [],
+      "primaryExerciseIds": [
+        "barbell_bench_press",
+        "incline_dumbbell_press"
+      ],
+      "decisionSnapshot": {
+        "dayOrigin": "planned",
+        "decisionSummary": "train_as_planned | conservative | high 80",
+        "recommendedTrainingDirection": "Run the upper-body day, but keep it easy to repeat.",
+        "topRecoveryLimiters": [],
+        "musclesToAvoid": [],
+        "movementPatternsToAvoid": [],
+        "primaryExerciseIds": [
+          "barbell_bench_press",
+          "incline_dumbbell_press"
+        ],
+        "selectedSubstituteIds": [
+          "lateral_raise",
+          "assisted_pull_up_machine"
+        ]
+      }
+    },
+    {
+      "userId": "user_1",
+      "asOf": "2026-04-01",
+      "recordedAt": "2026-04-09T20:06:27.550Z",
+      "plannedWorkoutType": "upper_body",
+      "sessionStyle": "normal",
+      "sessionDecisionStatus": "train_as_planned",
+      "readinessScore": 59.2,
+      "readinessBand": "moderate",
+      "dataConfidence": "high",
+      "frontendCopy": {
+        "sessionLabel": "Normal session",
+        "readinessHeadline": "Train as planned. A longer pattern is just starting to form, so keep the day simple.",
+        "primaryAction": "Start with lat pulldown or chest-supported machine row. That is your best fit today.",
+        "fallbackNote": "This is the cleanest option the backend sees for today."
+      },
+      "frontendExplanation": {
+        "planWhy": "Run the upper-body day as planned.",
+        "weekContext": "This day is part of an early pattern, so the goal is to make it easy to repeat. This suggested day is inferred from the user's recent training pattern and leans into the pull work they have actually been doing lately.",
+        "whyTodayLooksThisWay": [
+          "No major recovery flags are standing out today.",
+          "Glutes is still the biggest recovery limiter today."
+        ],
+        "focusAreas": [
+          "Primary pull-biased movement",
+          "Press or delt support"
+        ],
+        "cautionAreas": [],
+        "startingExercises": [
+          "Lat Pulldown",
+          "Chest-Supported Machine Row",
+          "Assisted Pull-up (Machine)"
+        ]
+      },
+      "focusMuscles": [
+        "chest",
+        "lats",
+        "upper_back"
+      ],
+      "limitMuscles": [],
+      "overworkedMuscles": [],
+      "recoveringMuscles": [
+        "glutes",
+        "hamstrings",
+        "spinal_erectors",
+        "core"
+      ],
+      "muscleGroupsToAvoidToday": [
+        "glutes",
+        "hamstrings",
+        "spinal_erectors",
+        "core"
+      ],
+      "primaryExerciseIds": [
+        "lat_pulldown",
+        "chest_supported_machine_row",
+        "assisted_pull_up_machine"
+      ],
+      "decisionSnapshot": {
+        "dayOrigin": "suggested",
+        "decisionSummary": "train_as_planned | normal | moderate 59",
+        "recommendedTrainingDirection": "Run the upper-body day as planned.",
+        "topRecoveryLimiters": [
+          "glutes (recovering)",
+          "hamstrings (recovering)",
+          "spinal erectors (recovering)"
+        ],
+        "musclesToAvoid": [
+          "glutes",
+          "hamstrings",
+          "spinal_erectors",
+          "core"
+        ],
+        "movementPatternsToAvoid": [],
+        "primaryExerciseIds": [
+          "lat_pulldown",
+          "chest_supported_machine_row",
+          "assisted_pull_up_machine"
+        ],
+        "selectedSubstituteIds": [
+          "barbell_bench_press"
+        ]
+      }
+    },
+    {
+      "userId": "user_1",
+      "asOf": "2026-04-09",
+      "recordedAt": "2026-04-09T20:43:53.793Z",
+      "sessionStyle": "normal",
+      "sessionDecisionStatus": "train_as_planned",
+      "readinessScore": 83.3,
+      "readinessBand": "high",
+      "dataConfidence": "low",
+      "frontendCopy": {
+        "sessionLabel": "Normal session",
+        "readinessHeadline": "Train as planned. A longer pattern is just starting to form, so keep the day simple.",
+        "primaryAction": "Start with barbell bench press or incline dumbbell press. This is a sensible repeatable place to begin today."
+      },
+      "frontendExplanation": {
+        "planWhy": "Train normally.",
+        "weekContext": "This day is part of an early pattern, so the goal is to make it easy to repeat.",
+        "whyTodayLooksThisWay": [
+          "No major recovery flags are standing out today.",
+          "This score is leaning more on current recovery than on deep comparable history."
+        ],
+        "focusAreas": [
+          "Use the best-fitting lower-overlap work first",
+          "Only add more work if the first block feels good"
+        ],
+        "cautionAreas": [],
+        "startingExercises": [
+          "Barbell Bench Press",
+          "Incline Dumbbell Press"
+        ]
+      },
+      "focusMuscles": [
+        "quads",
+        "chest",
+        "rear_delts"
+      ],
+      "limitMuscles": [],
+      "overworkedMuscles": [],
+      "recoveringMuscles": [],
+      "muscleGroupsToAvoidToday": [],
+      "primaryExerciseIds": [
+        "barbell_bench_press",
+        "incline_dumbbell_press"
+      ],
+      "decisionSnapshot": {
+        "dayOrigin": "unplanned",
+        "decisionSummary": "train_as_planned | normal | high 83",
+        "recommendedTrainingDirection": "Train normally.",
+        "topRecoveryLimiters": [],
+        "musclesToAvoid": [],
+        "movementPatternsToAvoid": [],
+        "primaryExerciseIds": [
+          "barbell_bench_press",
+          "incline_dumbbell_press"
+        ],
+        "selectedSubstituteIds": [
+          "overhead_shoulder_press",
+          "romanian_deadlift"
+        ]
+      }
+    }
+  ]
+}

@@ -4,15 +4,23 @@ import type {
   WorkoutCompletionInput,
   WorkoutMissedInput
 } from "../kai/types.js";
-import type { AppStore } from "../store/app-store.js";
-import type { PlannedWorkoutStore } from "../store/planned-workout-store.js";
-import type { ProfileStore } from "../store/profile-store.js";
+import type { BaskRepositories } from "../store/repositories.js";
+
+type WorkoutRepository = Pick<BaskRepositories, "workouts">["workouts"];
+type ProfileRepository = Pick<BaskRepositories, "profiles">["profiles"];
+type PlannedWorkoutRepository = Pick<
+  BaskRepositories,
+  "plannedWorkouts"
+>["plannedWorkouts"];
 
 export type ScenarioName =
   | "planned_today"
   | "mixed_week"
   | "momentum_week"
   | "missed_plan_reset"
+  | "suggested_upper_pull_bias"
+  | "thin_history_pain_limited_upper"
+  | "thin_history_equipment_limited_upper"
   | "upper_push_fatigued"
   | "posterior_chain_fatigued"
   | "push_day_fatigued"
@@ -25,76 +33,118 @@ export interface ScenarioSeedResult {
   profile: KaiUserProfile;
 }
 
-interface SeedScenarioOptions {
+interface SeedScenarioOptionsWithRepositories {
   userId: string;
   scenario: ScenarioName;
-  store: AppStore;
-  profileStore: ProfileStore;
-  plannedWorkoutStore: PlannedWorkoutStore;
+  repositories: Pick<BaskRepositories, "workouts" | "profiles" | "plannedWorkouts">;
 }
 
-export function seedScenario(options: SeedScenarioOptions): ScenarioSeedResult {
-  options.store.clearWorkouts(options.userId);
-  options.plannedWorkoutStore.clearPlannedWorkouts(options.userId);
+interface SeedScenarioOptionsWithStores {
+  userId: string;
+  scenario: ScenarioName;
+  store: WorkoutRepository;
+  profileStore: ProfileRepository;
+  plannedWorkoutStore: PlannedWorkoutRepository;
+}
 
-  const profile = seedProfile(options.userId, options.profileStore);
+type SeedScenarioOptions =
+  | SeedScenarioOptionsWithRepositories
+  | SeedScenarioOptionsWithStores;
+
+export function seedScenario(options: SeedScenarioOptions): ScenarioSeedResult {
+  const store =
+    "repositories" in options ? options.repositories.workouts : options.store;
+  const profileStore =
+    "repositories" in options ? options.repositories.profiles : options.profileStore;
+  const plannedWorkoutStore =
+    "repositories" in options
+      ? options.repositories.plannedWorkouts
+      : options.plannedWorkoutStore;
+
+  store.clearWorkouts(options.userId);
+  plannedWorkoutStore.clearPlannedWorkouts(options.userId);
+
+  const profile = seedProfile(options.userId, profileStore);
 
   switch (options.scenario) {
     case "planned_today":
-      seedPlannedToday(options.userId, options.plannedWorkoutStore);
+      seedPlannedToday(options.userId, plannedWorkoutStore);
       return { scenario: options.scenario, asOf: "2026-03-24", profile };
     case "mixed_week":
-      seedMixedWeek(options.userId, options.store, options.plannedWorkoutStore);
+      seedMixedWeek(options.userId, store, plannedWorkoutStore);
       return { scenario: options.scenario, asOf: "2026-03-22", profile };
     case "momentum_week":
-      seedMomentumWeek(options.userId, options.store, options.plannedWorkoutStore);
+      seedMomentumWeek(options.userId, store, plannedWorkoutStore);
       return { scenario: options.scenario, asOf: "2026-03-24", profile };
     case "missed_plan_reset":
-      seedMissedPlanReset(
-        options.userId,
-        options.store,
-        options.plannedWorkoutStore
-      );
+      seedMissedPlanReset(options.userId, store, plannedWorkoutStore);
       return { scenario: options.scenario, asOf: "2026-03-22", profile };
+    case "suggested_upper_pull_bias": {
+      const scenarioProfile = profileStore.saveProfile({
+        ...profile,
+        name: "Suggested Pull Bias",
+        goal: "build_muscle",
+        experienceLevel: "intermediate",
+        targetSessionsPerWeek: 4,
+        preferredWorkoutDays: ["monday", "tuesday", "thursday", "friday"],
+        preferredSessionLength: 55,
+        trainingStylePreference: "balanced"
+      });
+      seedSuggestedUpperPullBias(options.userId, store);
+      return { scenario: options.scenario, asOf: "2026-04-01", profile: scenarioProfile };
+    }
+    case "thin_history_pain_limited_upper": {
+      const scenarioProfile = profileStore.saveProfile({
+        ...profile,
+        name: "Thin History Pain-Limited Upper",
+        goal: "build_muscle",
+        experienceLevel: "intermediate",
+        targetSessionsPerWeek: 4,
+        preferredWorkoutDays: ["monday", "tuesday", "thursday", "friday"],
+        preferredSessionLength: 50,
+        trainingStylePreference: "balanced",
+        painFlags: ["front_delts"]
+      });
+      seedThinHistoryUpperDay(options.userId, plannedWorkoutStore);
+      return { scenario: options.scenario, asOf: "2026-03-30", profile: scenarioProfile };
+    }
+    case "thin_history_equipment_limited_upper": {
+      const scenarioProfile = profileStore.saveProfile({
+        ...profile,
+        name: "Thin History Equipment-Limited Upper",
+        goal: "build_muscle",
+        experienceLevel: "intermediate",
+        targetSessionsPerWeek: 4,
+        preferredWorkoutDays: ["monday", "tuesday", "thursday", "friday"],
+        preferredSessionLength: 50,
+        trainingStylePreference: "balanced",
+        equipmentAccess: "bodyweight_only"
+      });
+      seedThinHistoryUpperDay(options.userId, plannedWorkoutStore);
+      return { scenario: options.scenario, asOf: "2026-03-30", profile: scenarioProfile };
+    }
     case "upper_push_fatigued":
-      seedUpperPushFatigued(
-        options.userId,
-        options.store,
-        options.plannedWorkoutStore
-      );
+      seedUpperPushFatigued(options.userId, store, plannedWorkoutStore);
       return { scenario: options.scenario, asOf: "2026-03-24", profile };
     case "posterior_chain_fatigued":
-      seedPosteriorChainFatigued(
-        options.userId,
-        options.store,
-        options.plannedWorkoutStore
-      );
+      seedPosteriorChainFatigued(options.userId, store, plannedWorkoutStore);
       return { scenario: options.scenario, asOf: "2026-03-24", profile };
     case "push_day_fatigued":
-      seedPushDayFatigued(
-        options.userId,
-        options.store,
-        options.plannedWorkoutStore
-      );
+      seedPushDayFatigued(options.userId, store, plannedWorkoutStore);
       return { scenario: options.scenario, asOf: "2026-03-24", profile };
     case "pull_day_fatigued":
-      seedPullDayFatigued(
-        options.userId,
-        options.store,
-        options.plannedWorkoutStore
-      );
+      seedPullDayFatigued(options.userId, store, plannedWorkoutStore);
       return { scenario: options.scenario, asOf: "2026-03-24", profile };
     case "quad_dominant_fatigued":
-      seedQuadDominantFatigued(
-        options.userId,
-        options.store,
-        options.plannedWorkoutStore
-      );
+      seedQuadDominantFatigued(options.userId, store, plannedWorkoutStore);
       return { scenario: options.scenario, asOf: "2026-03-24", profile };
   }
 }
 
-function seedProfile(userId: string, profileStore: ProfileStore): KaiUserProfile {
+function seedProfile(
+  userId: string,
+  profileStore: ProfileRepository
+): KaiUserProfile {
   return profileStore.saveProfile({
     userId,
     name: "Kabur",
@@ -105,17 +155,26 @@ function seedProfile(userId: string, profileStore: ProfileStore): KaiUserProfile
 
 function seedPlannedToday(
   userId: string,
-  plannedWorkoutStore: PlannedWorkoutStore
+  plannedWorkoutStore: PlannedWorkoutRepository
 ): void {
   plannedWorkoutStore.savePlannedWorkout(
     createPlannedWorkout(userId, "planned_1", "2026-03-24", "full_body", 30)
   );
 }
 
+function seedThinHistoryUpperDay(
+  userId: string,
+  plannedWorkoutStore: PlannedWorkoutRepository
+): void {
+  plannedWorkoutStore.savePlannedWorkout(
+    createPlannedWorkout(userId, "planned_1", "2026-03-30", "upper_body", 45)
+  );
+}
+
 function seedMixedWeek(
   userId: string,
-  store: AppStore,
-  plannedWorkoutStore: PlannedWorkoutStore
+  store: WorkoutRepository,
+  plannedWorkoutStore: PlannedWorkoutRepository
 ): void {
   plannedWorkoutStore.savePlannedWorkout(
     createPlannedWorkout(userId, "planned_1", "2026-03-21", "upper_body", 40)
@@ -137,8 +196,8 @@ function seedMixedWeek(
 
 function seedMomentumWeek(
   userId: string,
-  store: AppStore,
-  plannedWorkoutStore: PlannedWorkoutStore
+  store: WorkoutRepository,
+  plannedWorkoutStore: PlannedWorkoutRepository
 ): void {
   plannedWorkoutStore.savePlannedWorkout(
     createPlannedWorkout(userId, "planned_1", "2026-03-22", "upper_body", 35)
@@ -163,8 +222,8 @@ function seedMomentumWeek(
 
 function seedMissedPlanReset(
   userId: string,
-  store: AppStore,
-  plannedWorkoutStore: PlannedWorkoutStore
+  store: WorkoutRepository,
+  plannedWorkoutStore: PlannedWorkoutRepository
 ): void {
   plannedWorkoutStore.savePlannedWorkout(
     createPlannedWorkout(userId, "planned_1", "2026-03-21", "upper_body", 40)
@@ -184,10 +243,62 @@ function seedMissedPlanReset(
   );
 }
 
+function seedSuggestedUpperPullBias(
+  userId: string,
+  store: WorkoutRepository
+): void {
+  for (const [index, date] of ["2026-03-25", "2026-03-29"].entries()) {
+    store.recordCompletedWorkout({
+      ...createCompletedWorkout(
+        userId,
+        `suggested_upper_pull_bias_upper_${index + 1}`,
+        date,
+        "upper_body",
+        55,
+        50
+      ),
+      sessionExercises: [
+        { exerciseId: "lat_pulldown", sets: 4, reps: 8, effort: "moderate" },
+        {
+          exerciseId: "chest_supported_machine_row",
+          sets: 4,
+          reps: 10,
+          effort: "moderate"
+        },
+        { exerciseId: "rear_delt_fly", sets: 3, reps: 15, effort: "moderate" }
+      ]
+    });
+  }
+
+  store.recordCompletedWorkout({
+    ...createCompletedWorkout(
+      userId,
+      "suggested_upper_pull_bias_lower_1",
+      "2026-03-27",
+      "lower_body",
+      55,
+      50
+    ),
+    sessionExercises: [{ exerciseId: "leg_press", sets: 3, reps: 10, effort: "moderate" }]
+  });
+
+  store.recordCompletedWorkout({
+    ...createCompletedWorkout(
+      userId,
+      "suggested_upper_pull_bias_lower_2",
+      "2026-03-31",
+      "lower_body",
+      55,
+      50
+    ),
+    sessionExercises: [{ exerciseId: "romanian_deadlift", sets: 3, reps: 8, effort: "moderate" }]
+  });
+}
+
 function seedUpperPushFatigued(
   userId: string,
-  store: AppStore,
-  plannedWorkoutStore: PlannedWorkoutStore
+  store: WorkoutRepository,
+  plannedWorkoutStore: PlannedWorkoutRepository
 ): void {
   plannedWorkoutStore.savePlannedWorkout(
     createPlannedWorkout(userId, "planned_1", "2026-03-24", "lower_body", 40)
@@ -205,8 +316,8 @@ function seedUpperPushFatigued(
 
 function seedPosteriorChainFatigued(
   userId: string,
-  store: AppStore,
-  plannedWorkoutStore: PlannedWorkoutStore
+  store: WorkoutRepository,
+  plannedWorkoutStore: PlannedWorkoutRepository
 ): void {
   plannedWorkoutStore.savePlannedWorkout(
     createPlannedWorkout(userId, "planned_1", "2026-03-24", "lower_body", 45)
@@ -231,8 +342,8 @@ function seedPosteriorChainFatigued(
 
 function seedPushDayFatigued(
   userId: string,
-  store: AppStore,
-  plannedWorkoutStore: PlannedWorkoutStore
+  store: WorkoutRepository,
+  plannedWorkoutStore: PlannedWorkoutRepository
 ): void {
   plannedWorkoutStore.savePlannedWorkout(
     createPlannedWorkout(userId, "planned_1", "2026-03-24", "push_day", 45)
@@ -261,8 +372,8 @@ function seedPushDayFatigued(
 
 function seedPullDayFatigued(
   userId: string,
-  store: AppStore,
-  plannedWorkoutStore: PlannedWorkoutStore
+  store: WorkoutRepository,
+  plannedWorkoutStore: PlannedWorkoutRepository
 ): void {
   plannedWorkoutStore.savePlannedWorkout(
     createPlannedWorkout(userId, "planned_1", "2026-03-24", "pull_day", 45)
@@ -290,8 +401,8 @@ function seedPullDayFatigued(
 
 function seedQuadDominantFatigued(
   userId: string,
-  store: AppStore,
-  plannedWorkoutStore: PlannedWorkoutStore
+  store: WorkoutRepository,
+  plannedWorkoutStore: PlannedWorkoutRepository
 ): void {
   plannedWorkoutStore.savePlannedWorkout(
     createPlannedWorkout(userId, "planned_1", "2026-03-24", "lower_body", 45)

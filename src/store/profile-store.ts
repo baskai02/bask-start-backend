@@ -1,9 +1,13 @@
-import type { KaiUserProfile } from "../kai/types.js";
+import { normalizeProfileInput } from "../kai/profile-adapter.js";
+import type { KaiAppProfileSnapshot, KaiUserProfile } from "../kai/types.js";
 import { loadJsonFile, saveJsonFile } from "./storage.js";
 
 export interface ProfileStore {
   getProfile(userId: string): KaiUserProfile;
+  exportProfilesState(): Record<string, KaiUserProfile>;
+  replaceProfilesState(nextState: Record<string, KaiUserProfile>): void;
   saveProfile(profile: KaiUserProfile): KaiUserProfile;
+  saveProfileSnapshot(profile: KaiAppProfileSnapshot): KaiUserProfile;
 }
 
 interface ProfileStoreOptions {
@@ -38,10 +42,29 @@ export function createProfileStore(
         }
       );
     },
-    saveProfile(profile) {
-      profiles[profile.userId] = profile;
+    exportProfilesState() {
+      return { ...profiles };
+    },
+    replaceProfilesState(nextState) {
+      for (const key of Object.keys(profiles)) {
+        delete profiles[key];
+      }
+
+      for (const [userId, profile] of Object.entries(nextState)) {
+        profiles[userId] = normalizeProfileInput(profile);
+      }
+
       saveJsonFile(options.storageFilePath, profiles);
-      return profile;
+    },
+    saveProfile(profile) {
+      profiles[profile.userId] = normalizeProfileInput(profile);
+      saveJsonFile(options.storageFilePath, profiles);
+      return profiles[profile.userId];
+    },
+    saveProfileSnapshot(profile) {
+      profiles[profile.userId] = normalizeProfileInput(profile);
+      saveJsonFile(options.storageFilePath, profiles);
+      return profiles[profile.userId];
     }
   };
 }

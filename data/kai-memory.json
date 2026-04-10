@@ -5,15 +5,60 @@
     "goal": "get_fitter",
     "experienceLevel": "beginner",
     "motivationStyle": "supportive",
-    "consistencyStatus": "consistent",
-    "consistencyScore": 100,
-    "currentStreak": 1,
-    "recentCompletedCount": 9,
+    "consistencyStatus": "inactive",
+    "consistencyScore": 40,
+    "currentStreak": 0,
+    "recentCompletedCount": 0,
     "recentMissedCount": 0,
-    "lastActivityAt": "2026-03-28",
     "restartStyle": "small_sessions",
-    "consistencyRisk": "low",
-    "coachingNote": "Building consistency through recent follow-through.",
-    "lastUpdated": "2026-03-28"
+    "consistencyRisk": "high",
+    "recoveryStatus": "slipping",
+    "recommendationTrustScore": 0.2,
+    "recommendationMemory": {
+      "byExerciseId": {
+        "barbell_bench_press": 0.28,
+        "romanian_deadlift": 0.11,
+        "incline_dumbbell_press": 0.28,
+        "overhead_shoulder_press": 0.06,
+        "tricep_pushdown": 0.28,
+        "overhead_tricep_extension": 0.06,
+        "deadlift_conventional": 0.28,
+        "barbell_bent_over_row": 0.28,
+        "shrug": 0.28
+      },
+      "byExerciseSlotKey": {
+        "main:barbell_bench_press": 0.28,
+        "main:romanian_deadlift": 0.11,
+        "secondary:incline_dumbbell_press": 0.28,
+        "secondary:overhead_shoulder_press": 0.06,
+        "accessory:tricep_pushdown": 0.28,
+        "accessory:overhead_tricep_extension": 0.06,
+        "main:deadlift_conventional": 0.28,
+        "secondary:barbell_bent_over_row": 0.28,
+        "accessory:shrug": 0.28
+      },
+      "byReasonTag": {},
+      "bySubstitutedExerciseId": {},
+      "bySubstitutedExerciseSlotKey": {},
+      "bySubstitutedWorkoutTypeExerciseKey": {},
+      "bySubstitutionPairKey": {}
+    },
+    "sessionPatternMemory": {
+      "patternLabel": "unsettled",
+      "dominantWorkoutTypes": [],
+      "recentSequence": [],
+      "commonTransitions": [],
+      "structuredPatternConfidence": 0
+    },
+    "suggestedWorkoutMemory": {
+      "overallFollowThroughRate": 0
+    },
+    "nextRecoveryAction": {
+      "type": "log_short_session",
+      "label": "Log one short session",
+      "detail": "Keep it brief and easy to finish. One clean rep is enough to restart momentum."
+    },
+    "coachingNote": "Recovery is slipping. Log one short session is the cleanest next move.",
+    "lastUpdated": "2026-03-24"
   }
 }

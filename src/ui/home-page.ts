@@ -363,6 +363,8 @@ export function renderHomePage(): string {
             <button id="saveProfileButton" class="secondary">Save Profile</button>
             <button id="seedPosteriorButton" class="secondary">Seed Posterior Chain</button>
             <button id="seedPushButton" class="secondary">Seed Upper Push</button>
+            <button id="seedPainLimitedUpperButton" class="secondary">Seed Pain-Limited Upper</button>
+            <button id="seedEquipmentLimitedUpperButton" class="secondary">Seed Equipment-Limited Upper</button>
             <button id="refreshButton" class="secondary">Refresh</button>
             <button id="resetButton" class="secondary">Clear Workouts</button>
           </div>
@@ -429,6 +431,11 @@ export function renderHomePage(): string {
             <p class="support-copy" id="readinessPrimaryAction"></p>
             <p class="support-copy" id="readinessFallbackNote"></p>
 
+            <p class="section-title">Decision Audit</p>
+            <p class="muted" id="readinessAuditSummary">Loading audit...</p>
+            <p class="support-copy" id="readinessAuditUserExplanation"></p>
+            <p class="support-copy" id="readinessAuditKaiExplanation"></p>
+
             <p class="section-title">Session Plan</p>
             <div class="session-list" id="sessionPlanList"></div>
 
@@ -448,6 +455,12 @@ export function renderHomePage(): string {
           <section class="card">
             <h2>Safer Alternatives</h2>
             <div class="exercise-list" id="saferAlternativesList"></div>
+
+            <p class="section-title">Audit Picks</p>
+            <div class="exercise-list" id="auditSelectedList"></div>
+
+            <p class="section-title">Audit Near-Misses</p>
+            <div class="exercise-list" id="auditDeprioritizedList"></div>
 
             <p class="section-title">Exercises To Avoid</p>
             <div class="exercise-list" id="avoidExercisesList"></div>
@@ -489,6 +502,8 @@ export function renderHomePage(): string {
       const saveProfileButton = document.getElementById("saveProfileButton");
       const seedPosteriorButton = document.getElementById("seedPosteriorButton");
       const seedPushButton = document.getElementById("seedPushButton");
+      const seedPainLimitedUpperButton = document.getElementById("seedPainLimitedUpperButton");
+      const seedEquipmentLimitedUpperButton = document.getElementById("seedEquipmentLimitedUpperButton");
       const refreshButton = document.getElementById("refreshButton");
       const resetButton = document.getElementById("resetButton");
       const addExerciseButton = document.getElementById("addExerciseButton");
@@ -510,12 +525,17 @@ export function renderHomePage(): string {
       const readinessHeadline = document.getElementById("readinessHeadline");
       const readinessPrimaryAction = document.getElementById("readinessPrimaryAction");
       const readinessFallbackNote = document.getElementById("readinessFallbackNote");
+      const readinessAuditSummary = document.getElementById("readinessAuditSummary");
+      const readinessAuditUserExplanation = document.getElementById("readinessAuditUserExplanation");
+      const readinessAuditKaiExplanation = document.getElementById("readinessAuditKaiExplanation");
       const sessionPlanList = document.getElementById("sessionPlanList");
       const substitutionList = document.getElementById("substitutionList");
       const overworkedList = document.getElementById("overworkedList");
       const recoveringList = document.getElementById("recoveringList");
       const avoidMusclesList = document.getElementById("avoidMusclesList");
       const saferAlternativesList = document.getElementById("saferAlternativesList");
+      const auditSelectedList = document.getElementById("auditSelectedList");
+      const auditDeprioritizedList = document.getElementById("auditDeprioritizedList");
       const avoidExercisesList = document.getElementById("avoidExercisesList");
       const muscleLoadList = document.getElementById("muscleLoadList");
       const exerciseLibraryList = document.getElementById("exerciseLibraryList");
@@ -526,6 +546,12 @@ export function renderHomePage(): string {
       saveProfileButton.addEventListener("click", saveProfile);
       seedPosteriorButton.addEventListener("click", () => seedScenario("posterior_chain_fatigued"));
       seedPushButton.addEventListener("click", () => seedScenario("upper_push_fatigued"));
+      seedPainLimitedUpperButton.addEventListener("click", () =>
+        seedScenario("thin_history_pain_limited_upper")
+      );
+      seedEquipmentLimitedUpperButton.addEventListener("click", () =>
+        seedScenario("thin_history_equipment_limited_upper")
+      );
       refreshButton.addEventListener("click", refreshAll);
       resetButton.addEventListener("click", resetWorkouts);
       addExerciseButton.addEventListener("click", addSessionExercise);
@@ -537,7 +563,7 @@ export function renderHomePage(): string {
 
       async function refreshAll() {
         setStatus("Refreshing app state...");
-        await Promise.all([loadLibrary(), loadKai(), loadReadiness()]);
+        await Promise.all([loadLibrary(), loadAppState()]);
         setStatus("App is up to date.");
       }
 
@@ -591,50 +617,79 @@ export function renderHomePage(): string {
         renderSessionBuilder();
       }
 
-      async function loadKai() {
+      async function loadAppState() {
         const response = await fetch(
-          "/users/" + encodeURIComponent(userIdInput.value) + "/kai?asOf=" + encodeURIComponent(dateInput.value)
+          "/users/" + encodeURIComponent(userIdInput.value) + "/app-state?asOf=" + encodeURIComponent(dateInput.value)
         );
         const data = await response.json();
+
         if (data.profile) {
           nameInput.value = data.profile.name;
           goalInput.value = data.profile.goal;
         }
-        kaiCategory.textContent = data.kai.category;
-        kaiMessage.textContent = data.kai.text;
-        kaiReason.textContent = data.kai.reason;
-        kaiNextStepText.textContent = data.kai.nextStep;
-        plannedWorkout.textContent = data.plannedWorkoutForDay
-          ? "Planned today: " + formatWorkoutLabel(data.plannedWorkoutForDay)
-          : "No planned workout for today.";
-        streakValue.textContent = String(data.signals.currentStreak);
-        statusValue.textContent = data.signals.consistencyStatus;
-        scoreValue.textContent = String(data.signals.consistencyScore);
-        activityValue.textContent = data.signals.lastActivityAt || "-";
-      }
 
-      async function loadReadiness() {
-        const response = await fetch(
-          "/users/" + encodeURIComponent(userIdInput.value) + "/today-readiness?asOf=" + encodeURIComponent(dateInput.value)
-        );
-        const data = await response.json();
-        const frontendCopy = data.frontendCopy || {};
-        readinessPlanLabel.textContent = data.plannedWorkoutType
-          ? "Planned workout type: " + data.plannedWorkoutType.replaceAll("_", " ")
+        const kaiPayload = data.kaiPayload || {};
+        kaiCategory.textContent = kaiPayload.kai?.category || "start";
+        kaiMessage.textContent = kaiPayload.kai?.text || "No Kai message yet.";
+        kaiReason.textContent = kaiPayload.kai?.reason || "";
+        kaiNextStepText.textContent = kaiPayload.kai?.nextStep || "-";
+        plannedWorkout.textContent = kaiPayload.plannedWorkoutForDay
+          ? "Planned today: " + formatWorkoutLabel(kaiPayload.plannedWorkoutForDay)
+          : "No planned workout for today.";
+        streakValue.textContent = String(kaiPayload.signals?.currentStreak ?? 0);
+        statusValue.textContent = kaiPayload.signals?.consistencyStatus || "-";
+        scoreValue.textContent = String(kaiPayload.signals?.consistencyScore ?? 0);
+        activityValue.textContent = kaiPayload.signals?.lastActivityAt || "-";
+
+        const readiness = data.todayReadiness || {};
+        const frontendCopy = readiness.frontendCopy || {};
+        readinessPlanLabel.textContent = readiness.plannedWorkoutType
+          ? "Planned workout type: " + readiness.plannedWorkoutType.replaceAll("_", " ")
           : "No planned workout type for today.";
         readinessSessionLabel.textContent = frontendCopy.sessionLabel || "Session";
-        readinessSessionLabel.className = "chip " + getTierTone(data.sessionPlan?.sessionStyle, data.sessionPlan?.blocks || []);
-        readinessHeadline.textContent = frontendCopy.readinessHeadline || data.sessionDecision?.summary || "Readiness updated.";
+        readinessSessionLabel.className = "chip " + getTierTone(readiness.sessionPlan?.sessionStyle, readiness.sessionPlan?.blocks || []);
+        readinessHeadline.textContent = frontendCopy.readinessHeadline || readiness.sessionDecision?.summary || "Readiness updated.";
         readinessPrimaryAction.textContent = frontendCopy.primaryAction || "";
         readinessFallbackNote.textContent = frontendCopy.fallbackNote || "";
-        renderChipList(overworkedList, data.overworkedMuscles || [], "bad");
-        renderChipList(recoveringList, data.recoveringMuscles || [], "caution");
-        renderChipList(avoidMusclesList, data.muscleGroupsToAvoidToday || [], "bad");
-        renderSessionPlan(data.sessionPlan?.blocks || []);
-        renderSubstitutions(data.substitutionOptions || []);
-        renderExerciseRecommendations(saferAlternativesList, data.saferAlternatives || [], "No safer alternatives yet.");
-        renderExerciseRecommendations(avoidExercisesList, data.exercisesToAvoidToday || [], "No avoid list yet.");
-        renderMuscleLoad(data.muscleLoadSummary || []);
+        renderDecisionAudit(readiness.decisionAudit || {});
+        renderChipList(overworkedList, readiness.overworkedMuscles || [], "bad");
+        renderChipList(recoveringList, readiness.recoveringMuscles || [], "caution");
+        renderChipList(avoidMusclesList, readiness.muscleGroupsToAvoidToday || [], "bad");
+        renderSessionPlan(readiness.sessionPlan?.blocks || []);
+        renderSubstitutions(readiness.substitutionOptions || []);
+        renderExerciseRecommendations(saferAlternativesList, readiness.saferAlternatives || [], "No safer alternatives yet.");
+        renderExerciseRecommendations(avoidExercisesList, readiness.exercisesToAvoidToday || [], "No avoid list yet.");
+        renderMuscleLoad(readiness.muscleLoadSummary || []);
+      }
+
+      function renderDecisionAudit(audit) {
+        const summaryParts = [];
+        if (audit.dayOrigin) {
+          summaryParts.push("Origin: " + audit.dayOrigin.replaceAll("_", " "));
+        }
+        if (audit.debugExplanation?.confidenceContext) {
+          summaryParts.push(audit.debugExplanation.confidenceContext);
+        }
+        if (audit.debugExplanation?.dayProvenance && !audit.dayOrigin) {
+          summaryParts.push(audit.debugExplanation.dayProvenance);
+        }
+
+        readinessAuditSummary.textContent = summaryParts.join(" • ") || "No audit details yet.";
+        readinessAuditUserExplanation.textContent = audit.userExplanation || "";
+        readinessAuditKaiExplanation.textContent = audit.kaiExplanation
+          ? "Kai view: " + audit.kaiExplanation
+          : "";
+
+        renderAuditExerciseList(
+          auditSelectedList,
+          audit.selectedSubstitutes || [],
+          "No audit picks yet."
+        );
+        renderAuditExerciseList(
+          auditDeprioritizedList,
+          audit.deprioritizedExercises || [],
+          "No near-miss options yet."
+        );
       }
 
       function addSessionExercise() {
@@ -787,6 +842,25 @@ export function renderHomePage(): string {
         });
       }
 
+      function renderAuditExerciseList(container, items, emptyText) {
+        container.innerHTML = "";
+        if (!items.length) {
+          container.innerHTML = '<p class="empty">' + emptyText + "</p>";
+          return;
+        }
+
+        items.slice(0, 4).forEach((item) => {
+          const card = document.createElement("div");
+          card.className = "exercise-item";
+          const provenance = formatAuditProvenance(item);
+          card.innerHTML =
+            "<strong>" + item.name + "</strong>" +
+            "<small>" + (item.why || []).join(" • ") + "</small>" +
+            (provenance ? "<small>" + provenance + "</small>" : "");
+          container.appendChild(card);
+        });
+      }
+
       function renderSessionPlan(blocks) {
         sessionPlanList.innerHTML = "";
         const visibleBlocks = blocks.filter((block) => (block.exampleExercises || block.exampleExerciseIds || []).length);
@@ -895,11 +969,42 @@ export function renderHomePage(): string {
           return "caution";
         }
 
+        if (sessionStyle === "conservative") {
+          return "caution";
+        }
+
         if ((blocks || []).some((block) => block.blockTier === "best")) {
           return "good";
         }
 
         return "caution";
+      }
+
+      function formatAuditProvenance(item) {
+        const parts = [];
+        if (item.selectionTier) {
+          parts.push("tier: " + item.selectionTier.replaceAll("_", " "));
+        }
+        if (item.provenance?.selectionSource) {
+          parts.push("source: " + item.provenance.selectionSource.replaceAll("_", " "));
+        }
+        if (item.provenance?.templateFitApplied) {
+          parts.push("template fit");
+        }
+        if (item.provenance?.recoveryPenaltyApplied) {
+          parts.push("recovery adjusted");
+        }
+        if (item.provenance?.equipmentConstraintApplied) {
+          parts.push("equipment limited");
+        }
+        if (item.provenance?.painConstraintApplied) {
+          parts.push("pain limited");
+        }
+        if (item.provenance?.memoryNudgeApplied) {
+          parts.push("memory nudged");
+        }
+
+        return parts.join(" • ");
       }
 
       function setStatus(text) {

@@ -1,0 +1,101 @@
+{
+  "user_1": [
+    {
+      "userId": "user_1",
+      "asOf": "2026-03-24",
+      "weekStart": "2026-03-23",
+      "weekEnd": "2026-03-29",
+      "recordedAt": "2026-04-09T22:16:49.334Z",
+      "reviewState": "protecting",
+      "adaptationAction": "protect_next_week",
+      "chapter": {
+        "tone": "protecting",
+        "title": "The week needed protecting",
+        "summary": "0/1 planned sessions landed this week. You are putting steadier weeks together and earning more room to progress without rushing it.",
+        "storyBeats": [
+          "0/1 planned sessions were completed, with 1 still left open.",
+          "You are putting steadier weeks together and earning more room to progress without rushing it.",
+          "Keep the next week modest and protect consistency before building again."
+        ],
+        "wins": [
+          "Support work was mostly there"
+        ],
+        "frictions": [
+          "The week still has unfinished planned work.",
+          "The week held together, but not strongly enough to add more.",
+          "0/1 planned sessions were completed."
+        ],
+        "nextChapter": "Keep stacking clean weeks before you ask for a bigger jump. Next up: Lower Body on 2026-03-24."
+      },
+      "insightTitles": [
+        "Plan adherence needs protection",
+        "Support work was mostly there",
+        "Too many sessions were survival-style",
+        "Weekly state: protecting"
+      ],
+      "readinessEntryCount": 1
+    },
+    {
+      "userId": "user_1",
+      "asOf": "2026-03-30",
+      "weekStart": "2026-03-30",
+      "weekEnd": "2026-04-05",
+      "recordedAt": "2026-04-09T22:16:46.970Z",
+      "reviewState": "steady",
+      "adaptationAction": "hold_next_week",
+      "chapter": {
+        "tone": "steady",
+        "title": "You are starting to stack stronger weeks",
+        "summary": "0/1 planned sessions landed this week. You are putting steadier weeks together and earning more room to progress without rushing it.",
+        "storyBeats": [
+          "0/1 planned sessions were completed, with 1 still left open.",
+          "You are putting steadier weeks together and earning more room to progress without rushing it.",
+          "Get the first planned session done before judging the week."
+        ],
+        "wins": [],
+        "frictions": [
+          "The week has open planned work, but nothing has actually slipped yet.",
+          "0/1 planned sessions were completed."
+        ],
+        "nextChapter": "Keep stacking clean weeks before you ask for a bigger jump. Next up: Upper Body on 2026-03-30."
+      },
+      "insightTitles": [
+        "Plan adherence needs protection",
+        "Weekly state: steady"
+      ],
+      "readinessEntryCount": 1
+    },
+    {
+      "userId": "user_1",
+      "asOf": "2026-04-09",
+      "weekStart": "2026-04-06",
+      "weekEnd": "2026-04-12",
+      "recordedAt": "2026-04-09T07:47:27.229Z",
+      "reviewState": "steady",
+      "adaptationAction": "hold_next_week",
+      "chapter": {
+        "tone": "steady",
+        "title": "The week found steady ground",
+        "summary": "0 sessions were logged this week. The week is still mostly unproven.",
+        "storyBeats": [
+          "The week is still too early to read as a real pattern.",
+          "Keep next week simple and establish one clear completed session early."
+        ],
+        "wins": [
+          "Barbell Bench Press is staying in the mix"
+        ],
+        "frictions": [
+          "There is not enough training activity yet to call this week strong or weak.",
+          "Recent upper push sessions have stayed reliable without misses or survival-style drop-offs."
+        ],
+        "nextChapter": "Keep next week simple and establish one clear completed session early."
+      },
+      "insightTitles": [
+        "Weekly state: steady",
+        "Upper push days are holding up well",
+        "Barbell Bench Press is staying in the mix"
+      ],
+      "readinessEntryCount": 0
+    }
+  ]
+}
